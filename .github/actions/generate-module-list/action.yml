@@ -27,7 +27,7 @@ runs:
       - name: Debug - Print passed in ignored modules in a newline-separated list
         shell: bash
         run: |
-          echo "Modules found:"
+          echo "Modules to ignore:"
           echo "${{ inputs.ignored_modules }}" | tr ',' '\n'
 
       - name: Find and list Maven modules
@@ -69,12 +69,6 @@ runs:
       - name: Debug - Print modules in a newline-separated list
         shell: bash
         run: |
-          echo "Modules found:"
+          echo "Modules list generated:"
           echo "${{ steps.list_modules.outputs.modules }}" | tr ',' '\n'
-        
-      - name: Use Maven modules in subsequent step
-        shell: bash
-        run: |
-          echo "Modules from previous step: ${{ steps.list_modules.outputs.modules }}"
-        env:
-          MODULES: ${{ steps.list_modules.outputs.modules }}
+
