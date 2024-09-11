@@ -24,13 +24,11 @@ runs:
           distribution: 'adopt'
           java-version: '11'
 
-      - name: Define modules to ignore
-        id: define_ignore_list
+      - name: Debug - Print passed in ignored modules in a newline-separated list
         shell: bash
         run: |
-          # Define a comma-separated list of modules to ignore
-          IGNORED_MODULES="hapi-fhir-bom,hapi-deployable-pom,hapi-fhir-spring-boot-sample-client-apache,hapi-fhir-spring-boot-sample-client-okhttp,hapi-fhir-spring-boot-starter,hapi-fhir-spring-boot-samples,hapi-fhir-validation-resources-dstu2.1,hapi-fhir-structures-r4b,hapi-fhir-validation-resources-r4b,hapi-fhir-jpa,hapi-fhir-serviceloaders,hapi-fhir-storage-batch2-test-utilities,hapi-fhir-cli,hapi-fhir-dist,hapi-fhir-jacoco,hapi-fhir-server-cds-hooks,hapi-fhir-caching-testing,hapi-fhir-cli-app,hapi-fhir-karaf-features,hapi-fhir-karaf-integration-tests"
-          echo "ignored_modules=$IGNORED_MODULES" >> $GITHUB_OUTPUT
+          echo "Modules found:"
+          echo "${{ inputs.ignored_modules }}" | tr ',' '\n'
 
       - name: Find and list Maven modules
         id: list_modules
@@ -39,7 +37,7 @@ runs:
           echo "Listing all Maven modules in the project..."
           # Initialize an array to hold module names
           MODULES=()
-          IGNORED_MODULES="${{ steps.define_ignore_list.outputs.ignored_modules }}"
+          IGNORED_MODULES="${{ inputs.ignored_modules }}"
 
           # Convert the ignored modules list to an array
           IFS=',' read -r -a IGNORED_ARRAY <<< "$IGNORED_MODULES"
