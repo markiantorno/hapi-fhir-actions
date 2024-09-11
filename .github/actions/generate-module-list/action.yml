@@ -66,11 +66,11 @@ runs:
           # Set the modules as output
           echo "modules_list=$MODULES_STR" >> $GITHUB_OUTPUT
 
-    - name: Debug - Print modules in a newline-separated list
-      shell: bash
-      run: |
-        echo "Modules list generated:"
-        echo "${{ steps.list_modules.outputs.modules_list }}" | tr ',' '\n'
+      - name: Debug - Print modules in a newline-separated list
+        shell: bash
+        run: |
+          echo "Modules list generated:"
+          echo "${{ steps.list_modules.outputs.modules_list }}" | tr ',' '\n'
 
     # Set the action-level output using the output from the step
     outputs:
