@@ -18,16 +18,32 @@ jobs:
           java-version: '11'
 
       - name: Find and list Maven modules
+        id: list_modules
         run: |
           echo "Listing all Maven modules in the project..."
+          # Initialize an array to hold module names
+          MODULES=()
           # Find all pom.xml files in the repository
-          find . -name "pom.xml" | while read -r pom; do
-            # Extract the directory path of the pom.xml
-            dir=$(dirname "$pom")
+          while IFS= read -r pom; do
             # Parse the modules from the parent pom.xml files
             if grep -q "<modules>" "$pom"; then
               echo "Modules found in $pom:"
               # Extract module names between <modules> and </modules>
-              sed -n '/<modules>/,/<\/modules>/p' "$pom" | grep -oP '<module>\K[^<]+'
+              MODULE_NAMES=$(sed -n '/<modules>/,/<\/modules>/p' "$pom" | grep -oP '<module>\K[^<]+')
+              for module in $MODULE_NAMES; do
+                MODULES+=("$module")
+              done
             fi
-          done
+          done < <(find . -name "pom.xml")
+
+          # Convert the array to a comma-separated string
+          MODULES_STR=$(IFS=, ; echo "${MODULES[*]}")
+          
+          # Set the modules as output
+          echo "modules=$MODULES_STR" >> $GITHUB_OUTPUT
+
+      - name: Use Maven modules in subsequent step
+        run: |
+          echo "Modules from previous step: ${{ steps.list_modules.outputs.modules }}"
+        env:
+          MODULES: ${{ steps.list_modules.outputs.modules }}
