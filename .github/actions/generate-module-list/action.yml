@@ -26,6 +26,7 @@ runs:
 
       - name: Define modules to ignore
         id: define_ignore_list
+        shell: bash
         run: |
           # Define a comma-separated list of modules to ignore
           IGNORED_MODULES="hapi-fhir-bom,hapi-deployable-pom,hapi-fhir-spring-boot-sample-client-apache,hapi-fhir-spring-boot-sample-client-okhttp,hapi-fhir-spring-boot-starter,hapi-fhir-spring-boot-samples,hapi-fhir-validation-resources-dstu2.1,hapi-fhir-structures-r4b,hapi-fhir-validation-resources-r4b,hapi-fhir-jpa,hapi-fhir-serviceloaders,hapi-fhir-storage-batch2-test-utilities,hapi-fhir-cli,hapi-fhir-dist,hapi-fhir-jacoco,hapi-fhir-server-cds-hooks,hapi-fhir-caching-testing,hapi-fhir-cli-app,hapi-fhir-karaf-features,hapi-fhir-karaf-integration-tests"
@@ -33,6 +34,7 @@ runs:
 
       - name: Find and list Maven modules
         id: list_modules
+        shell: bash
         run: |
           echo "Listing all Maven modules in the project..."
           # Initialize an array to hold module names
@@ -67,11 +69,13 @@ runs:
           echo "modules=$MODULES_STR" >> $GITHUB_OUTPUT
 
       - name: Debug - Print modules in a newline-separated list
+        shell: bash
         run: |
           echo "Modules found:"
           echo "${{ steps.list_modules.outputs.modules }}" | tr ',' '\n'
         
       - name: Use Maven modules in subsequent step
+        shell: bash
         run: |
           echo "Modules from previous step: ${{ steps.list_modules.outputs.modules }}"
         env:
