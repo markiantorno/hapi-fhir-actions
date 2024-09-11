@@ -8,9 +8,9 @@ inputs:
     required: true
     default: ''
 
-# outputs:
-#   modules_list:
-#     description: 'The generated list of Maven modules'
+outputs:
+  modules_list:
+    description: 'The generated list of Maven modules'
 
 runs:
   using: 'composite'
@@ -72,7 +72,7 @@ runs:
           echo "Modules list generated:"
           echo "${{ steps.list_modules.outputs.modules_list }}" | tr ',' '\n'
 
-# Set the action-level output using the output from the step
-outputs:
-  modules_list: ${{ steps.list_modules.outputs.modules_list }}
+# # Set the action-level output using the output from the step
+# outputs:
+#   modules_list: ${{ steps.list_modules.outputs.modules_list }}
 
