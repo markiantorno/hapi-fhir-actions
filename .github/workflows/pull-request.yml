@@ -1,0 +1,25 @@
+# .github/workflows/orchestrate.yml
+name: Orchestrate Module Processing
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  orchestrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Generate Modules List
+        id: generate_modules
+        uses: ./.github/actions/generate-modules
+        with:
+          ignored_modules: 'hapi-fhir-bom,hapi-deployable-pom,hapi-fhir-spring-boot-sample-client-apache,hapi-fhir-spring-boot-sample-client-okhttp,hapi-fhir-spring-boot-starter,hapi-fhir-spring-boot-samples,hapi-fhir-validation-resources-dstu2.1,hapi-fhir-structures-r4b,hapi-fhir-validation-resources-r4b,hapi-fhir-jpa,hapi-fhir-serviceloaders,hapi-fhir-storage-batch2-test-utilities,hapi-fhir-cli,hapi-fhir-dist,hapi-fhir-jacoco,hapi-fhir-server-cds-hooks,hapi-fhir-caching-testing,hapi-fhir-cli-app,hapi-fhir-karaf-features,hapi-fhir-karaf-integration-tests'
+
+      - name: Print generated modules
+        run: |
+          echo "Modules list generated:"
+          echo "${{ steps.generate_modules.outputs.modules_list }}"
