@@ -25,4 +25,6 @@ jobs:
       - name: Print generated modules
         run: |
           echo "Modules list generated:"
-          echo "${{ steps.generate_modules.outputs.modules_list }}"
+          echo "${{ steps.list_modules.outputs.modules_list }}"
+          # echo "${{ steps.generate_modules.outputs.modules_list }}"
+           
