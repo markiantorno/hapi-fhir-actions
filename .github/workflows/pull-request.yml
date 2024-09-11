@@ -1,10 +1,13 @@
 # .github/workflows/orchestrate.yml
-name: Orchestrate Module Processing
+name: Pull Request Pipeline
+
+# on:
+#   pull_request:
+#     branches:
+#       - master
 
 on:
-  pull_request:
-    branches:
-      - master
+  workflow_dispatch:
 
 jobs:
   orchestrate:
