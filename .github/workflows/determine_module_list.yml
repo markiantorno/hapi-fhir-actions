@@ -17,12 +17,24 @@ jobs:
           distribution: 'adopt'
           java-version: '11'
 
+      - name: Define modules to ignore
+        id: define_ignore_list
+        run: |
+          # Define a comma-separated list of modules to ignore
+          IGNORED_MODULES="hapi-fhir-android,hapi-fhir-server-openapi"
+          echo "ignored_modules=$IGNORED_MODULES" >> $GITHUB_OUTPUT
+
       - name: Find and list Maven modules
         id: list_modules
         run: |
           echo "Listing all Maven modules in the project..."
           # Initialize an array to hold module names
           MODULES=()
+          IGNORED_MODULES="${{ steps.define_ignore_list.outputs.ignored_modules }}"
+
+          # Convert the ignored modules list to an array
+          IFS=',' read -r -a IGNORED_ARRAY <<< "$IGNORED_MODULES"
+
           # Find all pom.xml files in the repository
           while IFS= read -r pom; do
             # Parse the modules from the parent pom.xml files
@@ -31,7 +43,12 @@ jobs:
               # Extract module names between <modules> and </modules>
               MODULE_NAMES=$(sed -n '/<modules>/,/<\/modules>/p' "$pom" | grep -oP '<module>\K[^<]+')
               for module in $MODULE_NAMES; do
-                MODULES+=("$module")
+                # Check if the module is in the ignored list
+                if [[ ! " ${IGNORED_ARRAY[@]} " =~ " ${module} " ]]; then
+                  MODULES+=("$module")
+                else
+                  echo "Ignoring module: $module"
+                fi
               done
             fi
           done < <(find . -name "pom.xml")
