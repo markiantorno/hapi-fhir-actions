@@ -42,6 +42,11 @@ jobs:
           # Set the modules as output
           echo "modules=$MODULES_STR" >> $GITHUB_OUTPUT
 
+      - name: Debug - Print modules in a newline-separated list
+        run: |
+          echo "Modules found:"
+          echo "${{ steps.list_modules.outputs.modules }}" | tr ',' '\n'
+        
       - name: Use Maven modules in subsequent step
         run: |
           echo "Modules from previous step: ${{ steps.list_modules.outputs.modules }}"
