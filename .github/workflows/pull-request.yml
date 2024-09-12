@@ -28,3 +28,8 @@ jobs:
           echo "Modules list generated:"
           echo "${{ steps.generate_modules.outputs.modules_list }}" | tr ',' '\n'
            
+      - name: Debug - print from inner name
+        shell: bash
+        run: |
+          echo "Modules list generated:"
+          echo "${{ steps.list_modules.outputs.modules_list }}" | tr ',' '\n'
