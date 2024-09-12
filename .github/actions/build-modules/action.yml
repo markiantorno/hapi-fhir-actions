@@ -29,6 +29,7 @@ runs:
     #     fetch-depth: 1
 
     - name: Print module name
+      shell: bash
       run: echo "Testing module ${{ matrix.module }}"
 
       # - name: Print source branch name
