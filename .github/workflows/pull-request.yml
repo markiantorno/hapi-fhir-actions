@@ -31,6 +31,7 @@ jobs:
         id: build_modules
         uses: ./.github/actions/build-modules
         with:
-          ignored_modules: ${{ steps.generate_modules.outputs.modules_list }}
+          moldules:  'hapi-fhir-server,hapi-fhir-server-mdm,hapi-fhir-server-openapi,hapi-fhir-converter'
+          # modules: ${{ steps.generate_modules.outputs.modules_list }}
 
           
