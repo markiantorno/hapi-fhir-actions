@@ -1,0 +1,33 @@
+name: 'Build Modules'
+description: 'Uses maven a list of passed in modules.'
+
+on:
+  workflow_dispatch:  # Allows manual triggering of the workflow
+      inputs:
+      modules:
+        description: 'Comma-separated list of module names to build'
+        required: true
+        default: 'module1,module2,module3'
+
+jobs:
+  build-modules:
+    runs-on: ubuntu-latest
+
+    # Matrix strategy for running builds in parallel
+    strategy:
+      matrix:
+        module: ${{ fromJSON('["' + github.event.inputs.modules.split(',').join('","') + '"]') }}
+      max-parallel: 256 # This is the theoretical max?
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin' # The JDK distribution to use
+        java-version: '17'      # The Java version to use
+
+    - name: Build Maven module
+      run: mvn -pl ${{ matrix.module }} clean install
