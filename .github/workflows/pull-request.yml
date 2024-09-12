@@ -32,7 +32,7 @@ jobs:
 
     strategy:
       matrix:
-        module: ${{ fromJSON(format('["{0}"]', inputs.modules.split(',').join('","'))) }}
+        module: ${{ fromJSON('["' + steps.generate_modules.outputs.modules_list.split(',').join('","') + '"]') }}
       max-parallel: 256
       
     steps:
