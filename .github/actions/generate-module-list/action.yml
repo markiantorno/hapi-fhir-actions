@@ -64,7 +64,7 @@ runs:
           MODULES_STR=$(IFS=, ; echo "${MODULES[*]}")
           
           # Set the modules as output
-          echo "modules_list=$MODULES_STR" >> $GITHUB_OUTPUT
+          echo "modules_list=$MODULES_STR" >> "$GITHUB_OUTPUT"
 
       - name: Debug - Print modules in a newline-separated list
         shell: bash
