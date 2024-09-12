@@ -9,7 +9,7 @@ inputs:
     default: ''
 
 outputs:
-  modules_list: ${{ steps.list_modules.outputs.modules_list }}
+  modules_list:
     description: 'The generated list of Maven modules'
     default: 'ERROR GENERATING LIST'
 
