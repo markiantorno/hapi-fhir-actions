@@ -1,13 +1,12 @@
 name: 'Build Modules'
 description: 'Uses maven a list of passed in modules.'
 
-on:
-  workflow_dispatch:  # Allows manual triggering of the workflow
-      inputs:
-        modules:
-          description: 'Comma-separated list of module names to build'
-          required: true
-          default: 'module1,module2,module3'
+
+inputs:
+  modules:
+    description: 'Comma-separated list of module names to build'
+    required: true
+    default: 'module1,module2,module3'
 
 jobs:
   build-modules:
@@ -30,8 +29,8 @@ jobs:
       - name: Print module name
         run: echo "Testing module ${{ matrix.module }}"
 
-      - name: Print source branch name
-        run: echo "${{ github.ref_name }}"
+      # - name: Print source branch name
+      #   run: echo "${{ github.ref_name }}"
 
       # - name: Install Docker
       #   uses: docker/setup-buildx-action@v2
