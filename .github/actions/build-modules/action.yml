@@ -16,6 +16,11 @@ jobs:
     container:
       image: maven:3.9-eclipse-temurin-21-jammy
 
+    strategy:
+      matrix:
+        module: ${{ fromJSON('["' + github.event.inputs.modules.split(',').join('","') + '"]') }}
+      max-parallel: 256  # Optional: limit the number of concurrent jobs
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -23,7 +28,7 @@ jobs:
           fetch-depth: 1
 
       - name: Print module name
-        run: echo "Testing module ${{ github.event.inputs.module }}"
+        run: echo "Testing module ${{ matrix.module }}"
 
       - name: Print source branch name
         run: echo "${{ github.ref_name }}"
@@ -56,12 +61,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: '${{ github.event.inputs.module }}_test_reports'
+          name: '${{ matrix.module }}_test_reports'
           path: '**/target/*-reports/*.txt'
 
       - name: Publish build artifacts
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: '${{ github.event.inputs.module }}_target'
-          path: '${{ github.workspace }}/${{ github.event.inputs.module }}/target/'
+          name: '${{ matrix.module }}_target'
+          path: '${{ github.workspace }}/${{ matrix.module }}/target/'
