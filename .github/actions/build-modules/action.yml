@@ -12,22 +12,56 @@ on:
 jobs:
   build-modules:
     runs-on: ubuntu-latest
-
-    # Matrix strategy for running builds in parallel
-    strategy:
-      matrix:
-        module: ${{ fromJSON('["' + github.event.inputs.modules.split(',').join('","') + '"]') }}
-      max-parallel: 256 # This is the theoretical max?
+    timeout-minutes: 60
+    container:
+      image: maven:3.9-eclipse-temurin-21-jammy
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
 
-    - name: Set up JDK
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin' # The JDK distribution to use
-        java-version: '17'      # The Java version to use
+      - name: Print module name
+        run: echo "Testing module ${{ github.event.inputs.module }}"
 
-    - name: Build Maven module
-      run: mvn -pl ${{ matrix.module }} clean install
+      - name: Print source branch name
+        run: echo "${{ github.ref_name }}"
+
+      - name: Install Docker
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: 17.09.0-ce
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Build Maven module
+        run: mvn clean verify jacoco:report -pl ${{ github.event.inputs.module }} -P JACOCO,CI -e -B \
+             -Dmaven.repo.local=${{ runner.temp }}/maven_cache -Dmaven.wagon.http.pool=false \
+             -Dhttp.keepAlive=false -Dstyle.color=always -Djansi.force=true
+        env:
+          MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
+
+      - name: Archive test reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: '${{ github.event.inputs.module }}_test_reports'
+          path: '**/target/*-reports/*.txt'
+
+      - name: Publish build artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: '${{ github.event.inputs.module }}_target'
+          path: '${{ github.workspace }}/${{ github.event.inputs.module }}/target/'
