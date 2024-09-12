@@ -18,7 +18,7 @@ jobs:
 
     strategy:
       matrix:
-        module: ${{ fromJSON('["' + github.event.inputs.modules.split(',').join('","') + '"]') }}
+        module: ${{ fromJSON(format('["{0}"]', github.event.inputs.modules.split(',').join('","'))) }}
       max-parallel: 256  # Optional: limit the number of concurrent jobs
 
     steps:
