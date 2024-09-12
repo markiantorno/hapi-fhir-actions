@@ -26,3 +26,11 @@ jobs:
         run: |
           echo "Modules list generated:"
           echo "${{ steps.generate_modules.outputs.modules_list }}" | tr ',' '\n'
+
+      - name: Build Modules
+        id: build_modules
+        uses: ./.github/actions/build-modules
+        with:
+          ignored_modules: ${{ steps.generate_modules.outputs.modules_list }}
+
+          
