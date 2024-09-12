@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  pull-request-check:
+  generate-module-list:
     runs-on: ubuntu-latest
     
     steps:
@@ -26,12 +26,19 @@ jobs:
         run: |
           echo "Modules list generated:"
           echo "${{ steps.generate_modules.outputs.modules_list }}" | tr ',' '\n'
+  
+  build-modules:
+    runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        module: ${{ fromJSON(format('["{0}"]', inputs.modules.split(',').join('","'))) }}
+      max-parallel: 256
+      
+    steps:
       - name: Build Modules
         id: build_modules
         uses: ./.github/actions/build-modules
         with:
-          moldules:  'hapi-fhir-server,hapi-fhir-server-mdm,hapi-fhir-server-openapi,hapi-fhir-converter'
-          # modules: ${{ steps.generate_modules.outputs.modules_list }}
-
+          module:  ${ matrix.module }
           
