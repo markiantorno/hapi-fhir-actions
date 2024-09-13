@@ -1,5 +1,5 @@
-name: 'Build Modules'
-description: 'Uses maven a list of passed in modules.'
+name: 'Build Module'
+description: 'Uses maven to build the module by name passes in.'
 
 inputs:
   module:
