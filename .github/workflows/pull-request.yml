@@ -25,7 +25,8 @@ jobs:
 
       - name: Format Modules List as JSON Array
         id: format_modules
-        run: echo "modules_list=$((echo '${{ steps.generate_list.outputs.modules_list }}' | jq -R -s -c 'split(",")'))" >> $GITHUB_OUTPUT
+        run: |
+          echo "modules_list=$(echo '${{ steps.generate_list.outputs.modules_list }}' | jq -R -s -c 'split(",")')" >> $GITHUB_OUTPUT
 
   build-modules:
     runs-on: ubuntu-latest
