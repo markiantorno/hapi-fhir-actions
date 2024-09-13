@@ -10,7 +10,7 @@ jobs:
       modules_list: ${{ steps.format_modules.outputs.modules_list }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Generate Modules List
         id: generate_list
@@ -38,7 +38,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2   # Ensure repository is checked out for local actions
+        uses: actions/checkout@v4   # Ensure repository is checked out for local actions
 
       - name: Build Modules
         uses: ./.github/actions/build-module
