@@ -7,7 +7,7 @@ jobs:
   generate-module-list:
     runs-on: ubuntu-latest
     outputs:
-      modules_list: ${{ steps.set_output.outputs.modules_list }}  # Referencing correct output step
+      modules_list: ${{ steps.format_modules.outputs.modules_list }}  # Reference the correct output step
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -23,15 +23,9 @@ jobs:
           echo "Modules list generated:"
           echo "${{ steps.generate_list.outputs.modules_list }}" | tr ',' '\n'
 
-      - name: Set Output
-        id: set_output
-        run: echo "modules_list=${{ steps.generate_list.outputs.modules_list }}" >> $GITHUB_ENV
-
       - name: Format Modules List as JSON Array
         id: format_modules
-        run: echo "modules_list=$(jq -R -s -c 'split(",")' <<< "${MODULES_LIST}")" >> $GITHUB_OUTPUT
-        env:
-          MODULES_LIST: ${{ steps.set_output.outputs.modules_list }}
+        run: echo "modules_list=$((echo '${{ steps.generate_list.outputs.modules_list }}' | jq -R -s -c 'split(",")'))" >> $GITHUB_OUTPUT
 
   build-modules:
     runs-on: ubuntu-latest
