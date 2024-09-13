@@ -41,6 +41,6 @@ jobs:
         uses: actions/checkout@v2   # Ensure repository is checked out for local actions
 
       - name: Build Modules
-        uses: ./.github/actions/build-modules
+        uses: ./.github/actions/build-module
         with:
           module: ${{ matrix.module }}
