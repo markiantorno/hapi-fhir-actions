@@ -30,7 +30,7 @@ jobs:
           
       - name: Set Output
         id: set_output
-        run: echo "modules_list=${{ steps.generate_list.outputs.modules_list }}" >> $GITHUB_OUTPUT
+        run: echo "modules_list=$(jq -R -s -c 'split(",")' <<< "$MODULE_NAMES")" >> $GITHUB_OUTPUT
   
   build-modules:
     runs-on: ubuntu-latest
@@ -38,7 +38,7 @@ jobs:
     
     strategy:
       matrix:
-        module: ${{ needs.generate-module-list.outputs.modules_list.split(',') }}
+        module: ${{ fromJSON(needs.generate-module-list.outputs.modules_list) }}
       max-parallel: 256
       
     steps:
