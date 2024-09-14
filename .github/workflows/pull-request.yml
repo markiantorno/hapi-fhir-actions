@@ -58,7 +58,9 @@ jobs:
       - name: Build with Maven
         env:
           JAVA_HOME_11_X64: /opt/java/openjdk
-        run: mvn install -P CI,CHECKSTYLE -Dmaven.test.skip=true -e -B \
+          MAVEN_OPTS: '-Xmx1024m'
+        run: |
+          mvn install -P CI,CHECKSTYLE -Dmaven.test.skip=true -e -B \
              -Dmaven.repo.local=$MAVEN_CACHE_FOLDER -Dmaven.javadoc.skip=true \
              -Dmaven.wagon.http.pool=false -Dhttp.keepAlive=false \
              -Dstyle.color=always -Djansi.force=true \
