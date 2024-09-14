@@ -54,11 +54,11 @@ jobs:
         run: |
           export MAVEN_CACHE_FOLDER="$HOME/.m2/repository"
           mkdir -p $MAVEN_CACHE_FOLDER && pwd && ls -al $MAVEN_CACHE_FOLDER
-
+      
       - name: Build with Maven
         env:
           JAVA_HOME_11_X64: /opt/java/openjdk
-          MAVEN_CACHE_FOLDER: ~/.m2/repository
+          MAVEN_CACHE_FOLDER: $HOME/.m2/repository
           MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
         run: |
           mvn install -P CI,CHECKSTYLE -Dmaven.test.skip=true -e -B \
