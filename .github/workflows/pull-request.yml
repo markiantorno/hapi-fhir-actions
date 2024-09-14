@@ -85,4 +85,5 @@ jobs:
       - name: Build Modules
         uses: ./.github/actions/build-module
         with:
+          name: ${{ github.event.pull_request.head.ref }} # refers to the branch from which the pull request was created
           module: ${{ matrix.module }}
