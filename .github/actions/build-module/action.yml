@@ -49,13 +49,13 @@ runs:
           -Dmaven.repo.local=$MAVEN_CACHE_FOLDER \
           -Dmaven.wagon.http.pool=false -Dhttp.keepAlive=false \
           -Dstyle.color=always -Djansi.force=true
-
+    
     - name: Copy Test Logs
       shell: bash
       if: always()
       run: |
         mkdir -p $GITHUB_WORKSPACE/reports
-        cp **/target/*-reports/*.txt $GITHUB_WORKSPACE/reports/
+        cp $GITHUB_WORKSPACE/${{ inputs.module }}/target/*-reports/*.txt $GITHUB_WORKSPACE/reports/
 
     - name: Upload Test Logs as Artifact
       uses: actions/upload-artifact@v3
