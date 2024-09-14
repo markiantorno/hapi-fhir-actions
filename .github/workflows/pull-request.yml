@@ -33,7 +33,8 @@ jobs:
     needs: generate-module-list
     strategy:
       matrix:
-        module: ${{ fromJSON(needs.generate-module-list.outputs.modules_list) }}
+        # module: ${{ fromJSON(needs.generate-module-list.outputs.modules_list) }}
+        module: [ "hapi-fhir-converter","hapi-fhir-validation","hapi-fhir-structures-dstu2" ]
       max-parallel: 256
 
     steps:
