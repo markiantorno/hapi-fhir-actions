@@ -26,6 +26,7 @@ runs:
         java-version: '11'
 
     - name: Install Docker
+      shell: bash
       run: |
         sudo apt-get update
         sudo apt-get install -y docker-ce=5:17.09.0~ce-0~ubuntu
@@ -38,6 +39,7 @@ runs:
         key: maven-${{ runner.os }}-${{ hashFiles('pom.xml') }}
 
     - name: Run Maven Build
+      shell: bash
       env:
         MAVEN_CACHE_FOLDER: $HOME/.m2/repository
         MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
@@ -49,6 +51,7 @@ runs:
           -Dstyle.color=always -Djansi.force=true
 
     - name: Copy Test Logs
+      shell: bash
       if: always()
       run: |
         mkdir -p $GITHUB_WORKSPACE/reports
