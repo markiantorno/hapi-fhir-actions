@@ -51,7 +51,9 @@ jobs:
             maven-${{ runner.os }}-
 
       - name: Create Maven cache folder
-        run: mkdir -p $MAVEN_CACHE_FOLDER && pwd && ls -al $MAVEN_CACHE_FOLDER
+        run: |
+          export MAVEN_CACHE_FOLDER="$HOME/.m2/repository"
+          mkdir -p $MAVEN_CACHE_FOLDER && pwd && ls -al $MAVEN_CACHE_FOLDER
 
       - name: Build with Maven
         env:
@@ -67,7 +69,9 @@ jobs:
   build-modules:
     name: Build Modules
     runs-on: ubuntu-latest
-    needs: generate-module-list
+    needs: 
+      - generate-module-list
+      - build-cache
     strategy:
       matrix:
         # module: ${{ fromJSON(needs.generate-module-list.outputs.modules_list) }}
