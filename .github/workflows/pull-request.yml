@@ -37,7 +37,7 @@ jobs:
     timeout-minutes: 60
 
     env:
-      MAVEN_CACHE_FOLDER: $HOME/.m2/repository   # Ensure the cache folder is defined here
+      MAVEN_CACHE_FOLDER: ~/.m2/repository   # Ensure the cache folder is defined here
 
     steps:
       - name: Checkout code
