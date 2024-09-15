@@ -55,8 +55,14 @@ jobs:
             
       - name: Create Maven cache folder
         run: |
+          export MAVEN_CACHE_FOLDER="$HOME/.m2/repository"
           mkdir -p $MAVEN_CACHE_FOLDER && pwd && ls -al $MAVEN_CACHE_FOLDER
       
+      - name: Check Permissions
+        run: |
+          ls -ld $HOME/.m2
+          ls -ld $HOME/.m2/repository
+
       - name: Build with Maven
         env:
           JAVA_HOME_11_X64: /opt/java/openjdk
@@ -66,6 +72,12 @@ jobs:
             -Dmaven.repo.local=$MAVEN_CACHE_FOLDER -Dmaven.javadoc.skip=true \
             -Dmaven.wagon.http.pool=false -Dhttp.keepAlive=false \
             -Dstyle.color=always -Djansi.force=true
+
+      - name: Save Cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.MAVEN_CACHE_FOLDER }}
+          key: maven-${{ runner.os }}-${{ hashFiles('pom.xml') }}
 
   build-modules:
     name: Build Modules
