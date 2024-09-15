@@ -37,6 +37,8 @@ runs:
       with:
         path: $HOME/.m2/repository
         key: maven-${{ runner.os }}-${{ hashFiles('pom.xml') }}
+        restore-keys: |
+            maven-${{ runner.os }}-
 
     - name: Run Maven Build
       shell: bash
