@@ -41,6 +41,7 @@ runs:
             maven-${{ runner.os }}-
 
     - name: Check if cache was restored
+      shell: bash
       run: |
         if [ -d "$MAVEN_CACHE_FOLDER" ]; then
           echo "Cache exists"
