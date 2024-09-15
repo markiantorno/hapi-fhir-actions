@@ -54,6 +54,8 @@ jobs:
         run: |
           export MAVEN_CACHE_FOLDER="$HOME/.m2/repository"
           mkdir -p $MAVEN_CACHE_FOLDER && pwd && ls -al $MAVEN_CACHE_FOLDER
+          # This ensures that MAVEN_CACHE_FOLDER is available as an environment variable in subsequent steps of the same job.
+          echo "MAVEN_CACHE_FOLDER=$MAVEN_CACHE_FOLDER" >> $GITHUB_ENV
       
       - name: Build with Maven
         env:
