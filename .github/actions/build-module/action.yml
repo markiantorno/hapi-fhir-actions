@@ -32,7 +32,7 @@ runs:
         sudo sh get-docker.sh
         docker --version
 
-    - name: Cache Maven dependencies
+    - name: Restore Maven Cache
       uses: actions/cache@v3
       with:
         path: $HOME/.m2/repository
@@ -40,7 +40,7 @@ runs:
         restore-keys: |
             maven-${{ runner.os }}-
 
-    - name: Check if cache was restored
+    - name: Verify cache was restored
       shell: bash
       run: |
         if [ -d "$HOME/.m2/repository" ]; then
@@ -50,7 +50,7 @@ runs:
           echo "Cache not found"
         fi
 
-    - name: Run Maven Build
+    - name: Build Maven Module
       shell: bash
       env:
         MAVEN_CACHE_FOLDER: $HOME/.m2/repository
