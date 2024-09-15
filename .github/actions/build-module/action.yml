@@ -40,6 +40,14 @@ runs:
         restore-keys: |
             maven-${{ runner.os }}-
 
+    - name: Check if cache was restored
+      run: |
+        if [ -d "$MAVEN_CACHE_FOLDER" ]; then
+          echo "Cache exists"
+        else
+          echo "Cache not found"
+        fi
+
     - name: Run Maven Build
       shell: bash
       env:
