@@ -35,7 +35,7 @@ runs:
     - name: Cache Maven dependencies
       uses: actions/cache@v3
       with:
-        path: ${{ env.MAVEN_CACHE_FOLDER }}
+        path: $HOME/.m2/repository
         key: maven-${{ runner.os }}-${{ hashFiles('pom.xml') }}
         restore-keys: |
             maven-${{ runner.os }}-
@@ -43,9 +43,9 @@ runs:
     - name: Check if cache was restored
       shell: bash
       run: |
-        if [ -d "$MAVEN_CACHE_FOLDER" ]; then
+        if [ -d "$HOME/.m2/repository" ]; then
           echo "Cache exists"
-          ls -R $MAVEN_CACHE_FOLDER
+          ls -R $HOME/.m2/repository
         else
           echo "Cache not found"
         fi
