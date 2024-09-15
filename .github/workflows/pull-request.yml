@@ -36,6 +36,9 @@ jobs:
       image: maven:3.9-eclipse-temurin-21-jammy
     timeout-minutes: 60
 
+    env:
+      MAVEN_CACHE_FOLDER: $HOME/.m2/repository   # Ensure the cache folder is defined here
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -45,22 +48,18 @@ jobs:
       - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
-          path: ~/.m2/repository
+          path: ${{ env.MAVEN_CACHE_FOLDER }}  # Reference the same cache folder path
           key: maven-${{ runner.os }}-${{ hashFiles('pom.xml') }}
           restore-keys: |
             maven-${{ runner.os }}-
-
+            
       - name: Create Maven cache folder
         run: |
-          export MAVEN_CACHE_FOLDER="$HOME/.m2/repository"
           mkdir -p $MAVEN_CACHE_FOLDER && pwd && ls -al $MAVEN_CACHE_FOLDER
-          # This ensures that MAVEN_CACHE_FOLDER is available as an environment variable in subsequent steps of the same job.
-          echo "MAVEN_CACHE_FOLDER=$MAVEN_CACHE_FOLDER" >> $GITHUB_ENV
       
       - name: Build with Maven
         env:
           JAVA_HOME_11_X64: /opt/java/openjdk
-          MAVEN_CACHE_FOLDER: $HOME/.m2/repository
           MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
         run: |
           mvn install -P CI,CHECKSTYLE -Dmaven.test.skip=true -e -B \
