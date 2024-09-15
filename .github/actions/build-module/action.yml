@@ -28,8 +28,8 @@ runs:
     - name: Install Docker
       shell: bash
       run: |
-        sudo apt-get update
-        sudo apt-get install -y docker-ce=5:20.10.7~ce-0~ubuntu
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sudo sh get-docker.sh
         docker --version
 
     - name: Cache Maven dependencies
