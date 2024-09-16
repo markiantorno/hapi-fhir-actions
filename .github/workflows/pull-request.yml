@@ -85,24 +85,24 @@ jobs:
       #     path: ~/.m2/repository
       #     key: maven-${{ runner.os }}-${{ hashFiles('pom.xml') }}
 
-  # build-modules:
-  #   name: Build Modules
-  #   runs-on: ubuntu-latest
-  #   needs: 
-  #     - generate-module-list
-  #     - build-cache
-  #   strategy:
-  #     matrix:
-  #       # module: ${{ fromJSON(needs.generate-module-list.outputs.modules_list) }}
-  #       module: [ "hapi-fhir-converter","hapi-fhir-validation","hapi-fhir-structures-dstu2" ]
-  #     max-parallel: 256
+  build-modules:
+    name: Build Modules
+    runs-on: ubuntu-latest
+    needs: 
+      # - generate-module-list
+      - build-cache
+    strategy:
+      matrix:
+        # module: ${{ fromJSON(needs.generate-module-list.outputs.modules_list) }}
+        module: [ "hapi-fhir-converter","hapi-fhir-validation","hapi-fhir-structures-dstu2" ]
+      max-parallel: 256
 
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4   # Ensure repository is checked out for local actions
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4   # Ensure repository is checked out for local actions
 
-  #     - name: Build Modules
-  #       uses: ./.github/actions/build-module
-  #       with:
-  #         name: ${{ github.event.pull_request.head.ref }} # refers to the branch from which the pull request was created
-  #         module: ${{ matrix.module }}
+      - name: Build Modules
+        uses: ./.github/actions/build-module
+        with:
+          name: ${{ github.event.pull_request.head.ref }} # refers to the branch from which the pull request was created
+          module: ${{ matrix.module }}
