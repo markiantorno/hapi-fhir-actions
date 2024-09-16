@@ -42,10 +42,10 @@ runs:
         MAVEN_CACHE_FOLDER: $HOME/.m2/repository  # Ensure MAVEN_CACHE_FOLDER is available in this step
 
     - name: Restore Maven Cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: $HOME/.m2/repository  # Update path to use $HOME
-        key: maven-${{ runner.os }}-${{ hashFiles('pom.xml') }}
+        key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
             maven-${{ runner.os }}-
 
