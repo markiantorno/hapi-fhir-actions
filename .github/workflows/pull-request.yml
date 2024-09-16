@@ -4,30 +4,30 @@ on:
   workflow_dispatch:
 
 jobs:
-  generate-module-list:
-    name: Generate List of Modules to Build
-    runs-on: ubuntu-latest
-    outputs:
-      modules_list: ${{ steps.format_modules.outputs.modules_list }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  # generate-module-list:
+  #   name: Generate List of Modules to Build
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     modules_list: ${{ steps.format_modules.outputs.modules_list }}
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
 
-      - name: Generate Modules List
-        id: generate_list
-        uses: ./.github/actions/generate-module-list
-        with:
-          ignored_modules: 'hapi-fhir-bom,hapi-deployable-pom,...'
+  #     - name: Generate Modules List
+  #       id: generate_list
+  #       uses: ./.github/actions/generate-module-list
+  #       with:
+  #         ignored_modules: 'hapi-fhir-bom,hapi-deployable-pom,...'
 
-      - name: Print generated modules
-        run: |
-          echo "Modules list generated:"
-          echo "${{ steps.generate_list.outputs.modules_list }}" | tr ',' '\n'
+  #     - name: Print generated modules
+  #       run: |
+  #         echo "Modules list generated:"
+  #         echo "${{ steps.generate_list.outputs.modules_list }}" | tr ',' '\n'
 
-      - name: Format Modules List as JSON Array
-        id: format_modules
-        run: |
-          echo "modules_list=$(echo '${{ steps.generate_list.outputs.modules_list }}' | jq -R -s -c 'split(",")')" >> $GITHUB_OUTPUT
+  #     - name: Format Modules List as JSON Array
+  #       id: format_modules
+  #       run: |
+  #         echo "modules_list=$(echo '${{ steps.generate_list.outputs.modules_list }}' | jq -R -s -c 'split(",")')" >> $GITHUB_OUTPUT
 
   build-cache:
     name: Setup Cache
