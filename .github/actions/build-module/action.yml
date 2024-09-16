@@ -45,6 +45,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: $HOME/.m2/repository  # Update path to use $HOME
+        enableCrossOsArchive: true  # Enable cross-runner cache
         key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
         restore-keys: |
             maven-${{ runner.os }}-
