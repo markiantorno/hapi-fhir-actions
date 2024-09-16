@@ -31,6 +31,14 @@ runs:
         curl -fsSL https://get.docker.com -o get-docker.sh
         sudo sh get-docker.sh
         docker --version
+    
+    - name: Create and List Maven Cache Directory
+      run: |
+        mkdir -p /root/.m2/repository
+        pwd
+        ls -al /root/.m2/repository
+      env:
+        MAVEN_CACHE_FOLDER: /root/.m2/repository  # Ensure MAVEN_CACHE_FOLDER is available in this step
 
     - name: Restore Maven Cache
       uses: actions/cache@v3
@@ -43,9 +51,9 @@ runs:
     - name: Verify cache was restored
       shell: bash
       run: |
-        if [ -d "~/.m2/repository" ]; then
+        if [ -d "/root/.m2/repository" ]; then
           echo "Cache exists"
-          ls -R ~/.m2/repository
+          ls -R /root/.m2/repository
         else
           echo "Cache not found"
         fi
