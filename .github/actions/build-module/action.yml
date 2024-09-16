@@ -33,6 +33,7 @@ runs:
         docker --version
     
     - name: Create and List Maven Cache Directory
+      shell: bash
       run: |
         mkdir -p /root/.m2/repository
         pwd
