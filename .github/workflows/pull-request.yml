@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
+
   # generate-module-list:
   #   name: Generate List of Modules to Build
   #   runs-on: ubuntu-latest
@@ -36,8 +37,8 @@ jobs:
       image: maven:3.9-eclipse-temurin-21-jammy
     timeout-minutes: 60
 
-    # env:
-    #   MAVEN_CACHE_FOLDER: ~/.m2/repository   # Ensure the cache folder is defined here
+    env:   # Define environment variables at the job level
+      MAVEN_CACHE_FOLDER: $HOME/.m2/repository   # Ensure the cache folder is defined here
 
     steps:
       - name: Checkout code
@@ -62,7 +63,7 @@ jobs:
       - name: Build with Maven
         env:
           # JAVA_HOME_11_X64: /opt/java/openjdk
-          MAVEN_CACHE_FOLDER: /root/.m2/repository
+          # MAVEN_CACHE_FOLDER: /root/.m2/repository
           MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
         run: |
           mvn install -P CI,CHECKSTYLE -Dmaven.test.skip=true -e -B \
@@ -75,7 +76,7 @@ jobs:
       - name: Cache Maven repository
         uses: actions/cache@v4
         with:
-          path: /root/.m2/repository
+          path: ${{ env.MAVEN_CACHE_FOLDER }}
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
             
       # - name: Save Maven dependencies
