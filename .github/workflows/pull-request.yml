@@ -78,6 +78,7 @@ jobs:
         with:
           path: ${{ env.MAVEN_CACHE_FOLDER }}
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          enableCrossOsArchive: true  # Enable cross-runner cache
             
       # - name: Save Maven dependencies
       #   uses: actions/cache@v3
