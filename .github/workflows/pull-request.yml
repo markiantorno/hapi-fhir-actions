@@ -62,7 +62,7 @@ jobs:
       - name: Build with Maven
         env:
           # JAVA_HOME_11_X64: /opt/java/openjdk
-          MAVEN_CACHE_FOLDER: ~/.m2/repository
+          MAVEN_CACHE_FOLDER: /root/.m2/repository
           MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
         run: |
           mvn install -P CI,CHECKSTYLE -Dmaven.test.skip=true -e -B \
@@ -75,7 +75,7 @@ jobs:
       - name: Cache Maven repository
         uses: actions/cache@v4
         with:
-          path: ~/.m2/repository
+          path: /root/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
             
       # - name: Save Maven dependencies
