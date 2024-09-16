@@ -48,14 +48,6 @@ jobs:
         with:
           distribution: "temurin"
           java-version: "17"
-
-      - name: Cache Maven repository
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
                     
       # - name: Create Maven cache folder
       #   run: |
@@ -77,6 +69,12 @@ jobs:
             -Dmaven.wagon.http.pool=false \
             -Dhttp.keepAlive=false \
             -Dstyle.color=always -Djansi.force=true
+            
+      - name: Cache Maven repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
             
       # - name: Save Maven dependencies
       #   uses: actions/cache@v3
