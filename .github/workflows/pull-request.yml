@@ -78,11 +78,11 @@ jobs:
     #   # - generate-module-list
     #   - build-cache
     
-    strategy:
-      matrix:
-        # module: ${{ fromJSON(needs.generate-module-list.outputs.modules_list) }}
-        module: [ "hapi-fhir-converter","hapi-fhir-validation","hapi-fhir-structures-dstu2" ]
-      max-parallel: 256
+    # strategy:
+    #   matrix:
+    #     # module: ${{ fromJSON(needs.generate-module-list.outputs.modules_list) }}
+    #     module: [ "hapi-fhir-converter","hapi-fhir-validation","hapi-fhir-structures-dstu2" ]
+    #   max-parallel: 256
 
     steps:
       - name: Checkout repository
@@ -141,7 +141,7 @@ jobs:
           MAVEN_CACHE_FOLDER: $HOME/.m2/repository  # Update to use $HOME
           MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
         run: |
-          mvn clean verify jacoco:report -pl ${{ inputs.module }} \
+          mvn clean verify jacoco:report -pl hapi-fhir-converter \
             -P JACOCO,CI -e -B \
             -Dmaven.repo.local=$MAVEN_CACHE_FOLDER \
             -Dmaven.wagon.http.pool=false -Dhttp.keepAlive=false \
