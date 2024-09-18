@@ -86,8 +86,80 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4   # Ensure repository is checked out for local actions
 
-      - name: Build Modules
-        uses: ./.github/actions/build-module
+      # - name: Build Modules
+      #   uses: ./.github/actions/build-module
+      #   with:
+      #     name: ${{ github.event.pull_request.head.ref }} # refers to the branch from which the pull request was created
+      #     module: ${{ matrix.module }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          name: ${{ github.event.pull_request.head.ref }} # refers to the branch from which the pull request was created
-          module: ${{ matrix.module }}
+          fetch-depth: 1
+  
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+  
+      - name: Install Docker
+        shell: bash
+        run: |
+          curl -fsSL https://get.docker.com -o get-docker.sh
+          sudo sh get-docker.sh
+          docker --version
+      
+      - name: Create and List Maven Cache Directory
+        shell: bash
+        run: |
+          mkdir -p $HOME/.m2/repository
+          pwd
+          ls -al $HOME/.m2/repository
+        env:
+          MAVEN_CACHE_FOLDER: $HOME/.m2/repository  # Ensure MAVEN_CACHE_FOLDER is available in this step
+  
+      - name: Restore Maven Cache
+        uses: actions/cache@v4
+        with:
+          path: $HOME/.m2/repository  # Update path to use $HOME
+          enableCrossOsArchive: true  # Enable cross-runner cache
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+              maven-${{ runner.os }}-
+  
+      - name: Verify cache was restored
+        shell: bash
+        run: |
+          if [ -d "$HOME/.m2/repository" ]; then
+            echo "Cache exists"
+            ls -R $HOME/.m2/repository
+          else
+            echo "Cache not found"
+          fi
+  
+      - name: Build Maven Module
+        shell: bash
+        env:
+          MAVEN_CACHE_FOLDER: $HOME/.m2/repository  # Update to use $HOME
+          MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
+        run: |
+          mvn clean verify jacoco:report -pl ${{ matrix.module }} \
+            -P JACOCO,CI -e -B \
+            -Dmaven.repo.local=$MAVEN_CACHE_FOLDER \
+            -Dmaven.wagon.http.pool=false -Dhttp.keepAlive=false \
+            -Dstyle.color=always -Djansi.force=true
+    
+
+
+
+
+
+
+
+
+
+
+
+
+      
