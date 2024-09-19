@@ -45,20 +45,7 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v4   # Ensure repository is checked out for local actions
-      
-      # - name: Set up Java
-      #   uses: actions/setup-java@v3
-      #   with:
-      #     distribution: 'temurin'
-      #     java-version: '11'
-  
-      # - name: Install Docker
-      #   shell: bash
-      #   run: |
-      #     curl -fsSL https://get.docker.com -o get-docker.sh
-      #     sudo sh get-docker.sh
-      #     docker --version
-      
+           
       - name: Create and List Maven Cache Directory
         shell: bash
         run: |
