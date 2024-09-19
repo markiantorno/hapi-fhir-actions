@@ -1,3 +1,4 @@
+
 name: Pull Request Pipeline
 
 on:
@@ -10,8 +11,9 @@ jobs:
     container:
       image: maven:3.9-eclipse-temurin-21-jammy
     timeout-minutes: 60
-    env:
-      MAVEN_CACHE_FOLDER: $HOME/.m2/repository
+
+    env:   # Define environment variables at the job level
+      MAVEN_CACHE_FOLDER: $HOME/.m2/repository   # Ensure the cache folder is defined here
 
     steps:
       - name: Checkout code
@@ -39,7 +41,16 @@ jobs:
         with:
           path: ${{ env.MAVEN_CACHE_FOLDER }}
           key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
-          enableCrossOsArchive: true
+          enableCrossOsArchive: true  # Enable cross-runner cache
+
+      - name: Checkout repository
+        uses: actions/checkout@v4   # Ensure repository is checked out for local actions
+      
+      # - name: Set up Java
+      #   uses: actions/setup-java@v3
+      #   with:
+      #     distribution: 'temurin'
+      #     java-version: '11'
   
       - name: Install Docker
         shell: bash
@@ -55,14 +66,16 @@ jobs:
           pwd
           ls -al $HOME/.m2/repository
         env:
-          MAVEN_CACHE_FOLDER: $HOME/.m2/repository
+          MAVEN_CACHE_FOLDER: $HOME/.m2/repository  # Ensure MAVEN_CACHE_FOLDER is available in this step
   
       - name: Restore Maven Cache
         uses: actions/cache@v4
         with:
-          path: ${{ env.MAVEN_CACHE_FOLDER }}
+          path: $HOME/.m2/repository  # Update path to use $HOME
+          enableCrossOsArchive: true  # Enable cross-runner cache
           key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
-          enableCrossOsArchive: true
+          restore-keys: |
+              maven-${{ runner.os }}-
   
       - name: Verify cache was restored
         shell: bash
@@ -77,7 +90,7 @@ jobs:
       - name: Build Maven Module
         shell: bash
         env:
-          MAVEN_CACHE_FOLDER: $HOME/.m2/repository
+          MAVEN_CACHE_FOLDER: $HOME/.m2/repository  # Update to use $HOME
           MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
         run: |
           mvn clean verify jacoco:report -pl hapi-fhir-converter \
@@ -85,8 +98,7 @@ jobs:
             -Dmaven.repo.local=$MAVEN_CACHE_FOLDER \
             -Dmaven.wagon.http.pool=false -Dhttp.keepAlive=false \
             -Dstyle.color=always -Djansi.force=true
-
-
+      
 
 
 # name: Pull Request Pipeline
