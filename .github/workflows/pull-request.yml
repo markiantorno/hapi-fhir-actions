@@ -52,12 +52,12 @@ jobs:
       #     distribution: 'temurin'
       #     java-version: '11'
   
-      - name: Install Docker
-        shell: bash
-        run: |
-          curl -fsSL https://get.docker.com -o get-docker.sh
-          sudo sh get-docker.sh
-          docker --version
+      # - name: Install Docker
+      #   shell: bash
+      #   run: |
+      #     curl -fsSL https://get.docker.com -o get-docker.sh
+      #     sudo sh get-docker.sh
+      #     docker --version
       
       - name: Create and List Maven Cache Directory
         shell: bash
