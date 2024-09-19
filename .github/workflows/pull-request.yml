@@ -46,6 +46,9 @@ jobs:
     needs: build-cache  # Ensure this job runs after build-cache
     runs-on: ubuntu-latest
 
+    env:
+      MAVEN_CACHE_FOLDER: $HOME/.m2/repository
+      
     steps:
       - name: Set up Java
         uses: actions/setup-java@v3
