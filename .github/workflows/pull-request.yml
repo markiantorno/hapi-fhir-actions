@@ -67,11 +67,12 @@ jobs:
 
     - name: Build Matrix Module
       env:
-        # MAVEN_CACHE_FOLDER: $HOME/.m2/repository  # Update to use $HOME
+        MAVEN_CACHE_FOLDER: ~/.m2/repository  # Update to use $HOME
         MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
       run: |
         mvn clean verify jacoco:report -pl hapi-fhir-converter \
           -P JACOCO,CI -e -B \
+          -Dmaven.repo.local=$MAVEN_CACHE_FOLDER \
           -Dmaven.wagon.http.pool=false -Dhttp.keepAlive=false \
           -Dstyle.color=always -Djansi.force=true
 
