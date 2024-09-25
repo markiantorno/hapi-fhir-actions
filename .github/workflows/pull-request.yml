@@ -5,67 +5,75 @@ on:
   workflow_dispatch:
 
 jobs:
-  cache-maven:
+  build_cache:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      - name: Set up Java
-        uses: actions/setup-java@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
           java-version: '17'
-
-      - name: Restore Maven Cache
+          distribution: 'temurin'
+  
+      - name: Cache Maven dependencies
+        id: cache-maven
         uses: actions/cache@v4
         with:
-          path: $HOME/.m2/repository
-          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
-            maven-${{ runner.os }}-
+            ${{ runner.os }}-maven-
             
       - name: Build with Maven
         env:
-          MAVEN_CACHE_FOLDER: $HOME/.m2/repository
+          # MAVEN_CACHE_FOLDER: $HOME/.m2/repository
           MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
+          # -Dmaven.repo.local=$MAVEN_CACHE_FOLDER \
         run: |
           mvn install -P CI,CHECKSTYLE -Dmaven.test.skip=true -e -B \
-            -Dmaven.repo.local=$MAVEN_CACHE_FOLDER \
             -Dmaven.javadoc.skip=true \
             -Dmaven.wagon.http.pool=false \
             -Dhttp.keepAlive=false \
             -Dstyle.color=always -Djansi.force=true
 
-      - name: Save Maven Cache
-        uses: actions/cache@v4
-        with:
-          path: $HOME/.m2/repository
-          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
-
   build-module:
     runs-on: ubuntu-latest
-    needs: cache-maven  # This ensures that cache-maven job completes first
-    steps:
-      - name: Restore Maven Cache
-        uses: actions/cache@v4
-        with:
-          path: $HOME/.m2/repository
-          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            maven-${{ runner.os }}-
+    needs: build_cache  # This ensures that cache-maven job completes first
 
-      - name: Build Maven Module
-        shell: bash
-        env:
-          MAVEN_CACHE_FOLDER: $HOME/.m2/repository  # Update to use $HOME
-          MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
-        run: |
-          mvn clean verify jacoco:report -pl hapi-fhir-converter \
-            -P JACOCO,CI -e -B \
-            -Dmaven.repo.local=$MAVEN_CACHE_FOLDER \
-            -Dmaven.wagon.http.pool=false -Dhttp.keepAlive=false \
-            -Dstyle.color=always -Djansi.force=true
+    strategy:
+      matrix:
+        module: [hapi-fhir-converter, hapi-fhir-client, hapi-fhir-structures-r4]
+        
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Restore Maven cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-
+
+    - name: Build Matrix Module
+      env:
+        # MAVEN_CACHE_FOLDER: $HOME/.m2/repository  # Update to use $HOME
+        MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
+      run: |
+        mvn clean verify jacoco:report -pl hapi-fhir-converter \
+          -P JACOCO,CI -e -B \
+          -Dmaven.wagon.http.pool=false -Dhttp.keepAlive=false \
+          -Dstyle.color=always -Djansi.force=true
 
 
 
