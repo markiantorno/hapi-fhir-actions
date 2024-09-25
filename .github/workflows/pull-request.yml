@@ -33,7 +33,7 @@ jobs:
           MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
           # -Dmaven.repo.local=$MAVEN_CACHE_FOLDER \
         run: |
-          mvn clean install -P CI,CHECKSTYLE test-compile \
+          mvn clean install -P CI,CHECKSTYLE \
             -Dmaven.test.skip=true -e -B \
             -Dmaven.javadoc.skip=true \
             -Dmaven.wagon.http.pool=false \
