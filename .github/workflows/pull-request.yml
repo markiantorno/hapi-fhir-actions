@@ -40,7 +40,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.MAVEN_CACHE_FOLDER }}
-          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          key: 1234 # maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
           enableCrossOsArchive: true  # Enable cross-runner cache
 
       - name: Checkout repository
@@ -54,13 +54,29 @@ jobs:
           ls -al $HOME/.m2/repository
         env:
           MAVEN_CACHE_FOLDER: $HOME/.m2/repository  # Ensure MAVEN_CACHE_FOLDER is available in this step
-  
+
+  build-module:
+    needs: 
+     - build-cache
+    name: Build Module
+    runs-on: ubuntu-latest
+    container:
+      image: maven:3.9-eclipse-temurin-21-jammy
+    timeout-minutes: 60
+
+    env:   # Define environment variables at the job level
+      MAVEN_CACHE_FOLDER: $HOME/.m2/repository   # Ensure the cache folder is defined here
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
       - name: Restore Maven Cache
         uses: actions/cache@v4
         with:
           path: $HOME/.m2/repository  # Update path to use $HOME
           enableCrossOsArchive: true  # Enable cross-runner cache
-          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          key: 1234 # maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
               maven-${{ runner.os }}-
   
