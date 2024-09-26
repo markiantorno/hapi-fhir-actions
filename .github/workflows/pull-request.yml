@@ -19,7 +19,7 @@ jobs:
         id: generate_list
         uses: ./.github/actions/generate-module-list
         with:
-          ignored_modules: 'hapi-fhir-bom,hapi-deployable-pom,...'
+          ignored_modules: 'hapi-fhir-bom,hapi-deployable-pom,hapi-fhir-spring-boot-sample-client-apache,hapi-fhir-spring-boot-sample-client-okhttp,hapi-fhir-spring-boot-starter,hapi-fhir-spring-boot-samples,hapi-fhir-validation-resources-dstu2.1,hapi-fhir-structures-r4b,hapi-fhir-validation-resources-r4b,hapi-fhir-jpa,hapi-fhir-serviceloaders,hapi-fhir-storage-batch2-test-utilities,hapi-fhir-cli,hapi-fhir-dist,hapi-fhir-jacoco,hapi-fhir-server-cds-hooks,hapi-fhir-caching-testing,hapi-fhir-cli-app,hapi-fhir-karaf-features,hapi-fhir-karaf-integration-tests'
 
       - name: Print generated modules
         run: |
@@ -53,15 +53,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      # Only run this step if the cache was not hit
       - name: Populate Cache with Remote Dependencies
+        if: steps.cache-maven.outputs.cache-hit != 'true'
         env:
           MAVEN_CACHE_FOLDER: $HOME/.m2/repository
         run: |
           mvn dependency:resolve-plugins dependency:resolve test-compile \
             -Dmaven.repo.local=$MAVEN_CACHE_FOLDER \
             -Dstyle.color=always -Djansi.force=true
-      
+
       - name: Build with Maven
+        if: steps.cache-maven.outputs.cache-hit != 'true'
         env:
           MAVEN_CACHE_FOLDER: $HOME/.m2/repository
           MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
@@ -73,6 +76,15 @@ jobs:
             -Dmaven.repo.local=$MAVEN_CACHE_FOLDER \
             -Dhttp.keepAlive=false \
             -Dstyle.color=always -Djansi.force=true
+      
+      # Debug cache hit
+      - name: Cache Hit or Miss
+        run: |
+          if [[ "${{ steps.cache-maven.outputs.cache-hit }}" == "true" ]]; then
+            echo "Cache hit, skipping dependency resolution.";
+          else
+            echo "Cache miss, dependencies have been downloaded.";
+          fi
 
   build-module:
     runs-on: ubuntu-latest
