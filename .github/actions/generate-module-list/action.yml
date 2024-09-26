@@ -72,8 +72,8 @@ runs:
           echo "Modules list generated:"
           echo "${{ steps.list_modules.outputs.modules_list }}" | tr ',' '\n'
 
-      # - name: Format Modules List as JSON Array
-      #   id: format_modules
-      #   shell: bash
-      #   run: |
-      #     echo "modules_list=$(echo '${{ steps.list_modules.outputs.modules_list }}' | jq -R -s -c 'split(",")')" >> $GITHUB_OUTPUT
+      - name: Format Modules List as JSON Array
+        id: format_modules
+        shell: bash
+        run: |
+          echo "modules_list=$(echo '${{ steps.list_modules.outputs.modules_list }}' | jq -R -s -c 'split(",")')" >> $GITHUB_OUTPUT
