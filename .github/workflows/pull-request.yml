@@ -97,12 +97,7 @@ jobs:
         # module: [ "hapi-fhir-converter","hapi-fhir-validation","hapi-fhir-structures-dstu2" ]
       max-parallel: 256
         
-    steps:
-    - name: Print generated modules
-      run: |
-        echo "Modules list generated:"
-        echo "${{ needs.generate-module-list.outputs.modules_list }}" | tr ',' '\n'
-    
+    steps:    
     - name: Checkout repository
       uses: actions/checkout@v4
 
