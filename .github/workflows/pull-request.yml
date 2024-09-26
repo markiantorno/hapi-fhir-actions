@@ -66,6 +66,12 @@ jobs:
             -Dhttp.keepAlive=false \
             -Dstyle.color=always -Djansi.force=true
 
+      - name: Build with Maven
+        env:
+          MAVEN_CACHE_FOLDER: $HOME/.m2/repository
+        run: |
+          mvn dependency:resolve-plugins dependency:resolve test-compile
+
   build-module:
     runs-on: ubuntu-latest
     needs: 
