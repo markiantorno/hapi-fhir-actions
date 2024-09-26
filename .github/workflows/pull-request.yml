@@ -32,7 +32,6 @@ jobs:
         run: |
           echo "Formatted modules list: ${{ steps.format_modules.outputs.modules_list }}"
 
-
       # - name: Format Modules List as JSON Array
       #   id: format_modules
       #   run: |
@@ -108,7 +107,7 @@ jobs:
 
     strategy:
       matrix:
-        module: ${{ fromJson(steps.format_modules.outputs.modules_list) }}
+        module: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
         # module: [ "hapi-fhir-converter","hapi-fhir-validation","hapi-fhir-structures-dstu2" ]
       max-parallel: 256
         
