@@ -35,37 +35,35 @@ runs:
         id: list_modules
         shell: bash
         run: |
-          echo "Listing all Maven modules in the project..."
-          # Initialize an array to hold module names
-          MODULES=()
-          IGNORED_MODULES="${{ inputs.ignored_modules }}"
-
-          # Convert the ignored modules list to an array
-          IFS=',' read -r -a IGNORED_ARRAY <<< "$IGNORED_MODULES"
-
-          # Find all pom.xml files in the repository
-          while IFS= read -r pom; do
-            # Parse the modules from the parent pom.xml files
-            if grep -q "<modules>" "$pom"; then
-              echo "Modules found in $pom:"
-              # Extract module names between <modules> and </modules>
-              MODULE_NAMES=$(sed -n '/<modules>/,/<\/modules>/p' "$pom" | grep -oP '<module>\K[^<]+')
-              for module in $MODULE_NAMES; do
-                # Check if the module is in the ignored list
-                if [[ ! " ${IGNORED_ARRAY[@]} " =~ " ${module} " ]]; then
-                  MODULES+=("$module")
-                else
-                  echo "Ignoring module: $module"
+          # Specify the directory containing your multi-module Maven project
+          root_dir=$(pwd)
+          ignored_modules="${{ inputs.ignored_modules }}"  # The ignored modules list
+          ignored_modules_array=(${ignored_modules//,/ })   # Convert to an array
+  
+          # Function to recursively find modules and maintain the directory structure
+          find_modules() {
+            local current_dir=$1
+            for dir in "$current_dir"/*/; do
+              if [[ -f "$dir/pom.xml" ]]; then
+                module_name=$(basename "$dir")
+                relative_path=$(realpath --relative-to="$root_dir" "$dir")
+                
+                # Check if the module is ignored
+                if [[ ! " ${ignored_modules_array[@]} " =~ " $module_name " ]]; then
+                  echo "$relative_path"  # Store the full path relative to the root
                 fi
-              done
-            fi
-          done < <(find . -name "pom.xml")
-
-          # Convert the array to a comma-separated string
-          MODULES_STR=$(IFS=, ; echo "${MODULES[*]}")
-          
-          # Set the modules as output
-          echo "modules_list=$MODULES_STR" >> $GITHUB_OUTPUT
+  
+                # Recursively check for submodules
+                find_modules "$dir"
+              fi
+            done
+          }
+  
+          # Run the function from the root directory and capture the result
+          modules_list=$(find_modules "$root_dir")
+  
+          # Set the output as a comma-separated list
+          echo "modules_list=$(echo \"$modules_list\" | paste -sd ',' -)" >> $GITHUB_OUTPUT
           echo "Done compiling module list..."
 
       - name: Debug - Print modules in a newline-separated list
@@ -74,3 +72,8 @@ runs:
           echo "Modules list generated:"
           echo "${{ steps.list_modules.outputs.modules_list }}" | tr ',' '\n'
 
+      - name: Format Modules List as JSON Array
+        id: format_modules
+        shell: bash
+        run: |
+          echo "modules_list=$(echo '${{ steps.list_modules.outputs.modules_list }}' | jq -R -s -c 'split(",")')" >> $GITHUB_OUTPUT
