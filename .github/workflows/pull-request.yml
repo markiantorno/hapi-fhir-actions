@@ -82,7 +82,9 @@ jobs:
 
     strategy:
       matrix:
-        module: [hapi-fhir-converter, hapi-fhir-client, hapi-fhir-structures-r4]
+        module: ${{ fromJSON(needs.generate-module-list.outputs.modules_list) }}
+        # module: [ "hapi-fhir-converter","hapi-fhir-validation","hapi-fhir-structures-dstu2" ]
+      max-parallel: 256
         
     steps:
     - name: Checkout repository
