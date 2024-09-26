@@ -121,7 +121,7 @@ jobs:
         MAVEN_CACHE_FOLDER: $HOME/.m2/repository  
         MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
       run: |
-        mvn clean verify jacoco:report -pl hapi-fhir-converter \
+        mvn clean verify jacoco:report -pl ${{ matrix.module }} \
           -P JACOCO,CI -e -B \
           -Dmaven.repo.local=$MAVEN_CACHE_FOLDER \
           -Dmaven.wagon.http.pool=false -Dhttp.keepAlive=false \
