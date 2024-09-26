@@ -29,7 +29,7 @@ jobs:
       - name: Format Modules List as JSON Array
         id: format_modules
         run: |
-          modules_list=$(echo '${{ steps.generate_list.outputs.modules_list }}' | jq -R -s -c 'split(",")')
+          modules_list=$(echo '${{ steps.generate_list.outputs.modules_list }}' | tr ' ' '\n' | jq -R -s -c 'split("\n") | map(select(. != ""))')
           echo "modules_list=${modules_list}" >> $GITHUB_OUTPUT
       
       - name: Print formatted modules list
@@ -98,7 +98,7 @@ jobs:
 
     strategy:
       matrix:
-        module: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
+        module: ${{ fromJson(steps.format_modules.outputs.modules_list) }}
         # module: [ "hapi-fhir-converter","hapi-fhir-validation","hapi-fhir-structures-dstu2" ]
       max-parallel: 256
         
