@@ -24,20 +24,20 @@ jobs:
       - name: Print generated modules
         run: |
           echo "Modules list generated:"
-          echo "${{ steps.generate_list.outputs.modules_list }}" | tr ',' '\n'
+          echo "${{ steps.generate_list.outputs.modules_list }}"
 
-      - name: Format Modules List as JSON Array
-        id: format_modules
-        run: |
-          modules_list=$(echo '${{ steps.generate_list.outputs.modules_list }}' | jq -R -s -c 'split(" ")')
-          echo "modules_list=${modules_list}" >> $GITHUB_OUTPUT
+      # - name: Format Modules List as JSON Array
+      #   id: format_modules
+      #   run: |
+      #     modules_list=$(echo '${{ steps.generate_list.outputs.modules_list }}' | jq -R -s -c 'split(" ")')
+      #     echo "modules_list=${modules_list}" >> $GITHUB_OUTPUT
 
         # modules_list=$(echo '${{ steps.generate_list.outputs.modules_list }}' | tr ' ' '\n' | jq -R -s -c 'split("\n") | map(select(. != ""))')
         # echo "modules_list=${modules_list}" >> $GITHUB_OUTPUT
       
-      - name: Print formatted modules list
-        run: |
-          echo "Formatted modules list: ${{ steps.format_modules.outputs.modules_list }}"
+      # - name: Print formatted modules list
+      #   run: |
+      #     echo "Formatted modules list: ${{ steps.format_modules.outputs.modules_list }}"
 
   build_cache:
     runs-on: ubuntu-latest  
@@ -101,7 +101,7 @@ jobs:
 
     strategy:
       matrix:
-        module: ${{ fromJson(needs.generate_module_list.outputs.modules_list) }}
+        module: ${{ fromJson('["' + steps.generate_modules.outputs.modules_list.replace(',','","') + '"]') }}
         # module: [ "hapi-fhir-converter","hapi-fhir-validation","hapi-fhir-structures-dstu2" ]
       max-parallel: 256
         
