@@ -21,10 +21,17 @@ jobs:
         with:
           ignored_modules: 'hapi-fhir-bom,hapi-deployable-pom,hapi-fhir-spring-boot-sample-client-apache,hapi-fhir-spring-boot-sample-client-okhttp,hapi-fhir-spring-boot-starter,hapi-fhir-spring-boot-samples,hapi-fhir-validation-resources-dstu2.1,hapi-fhir-structures-r4b,hapi-fhir-validation-resources-r4b,hapi-fhir-jpa,hapi-fhir-serviceloaders,hapi-fhir-storage-batch2-test-utilities,hapi-fhir-cli,hapi-fhir-dist,hapi-fhir-jacoco,hapi-fhir-server-cds-hooks,hapi-fhir-caching-testing,hapi-fhir-cli-app,hapi-fhir-karaf-features,hapi-fhir-karaf-integration-tests'
 
-      - name: Print generated modules
+      - name: Format Modules List as JSON Array
+        id: format_modules
         run: |
-          echo "Modules list generated:"
-          echo "${{ steps.generate_list.outputs.modules_list }}"
+          # Generate a JSON array from the comma-separated module list
+          modules_list=$(echo '${{ steps.generate_list.outputs.modules_list }}' | jq -R -s -c 'split(",")')
+          echo "modules_list=${modules_list}" >> $GITHUB_OUTPUT
+
+      - name: Print formatted modules list
+        run: |
+          echo "Formatted modules list: ${{ steps.format_modules.outputs.modules_list }}"
+
 
       # - name: Format Modules List as JSON Array
       #   id: format_modules
@@ -101,7 +108,7 @@ jobs:
 
     strategy:
       matrix:
-        module: ${{ fromJson('["' + steps.generate_modules.outputs.modules_list.replace(',','","') + '"]') }}
+        module: ${{ fromJson(steps.format_modules.outputs.modules_list) }}
         # module: [ "hapi-fhir-converter","hapi-fhir-validation","hapi-fhir-structures-dstu2" ]
       max-parallel: 256
         
