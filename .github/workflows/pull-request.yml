@@ -81,9 +81,7 @@ jobs:
       - name: Format Modules List as JSON Array
         id: format_modules
         run: |
-          modules_list=$(echo '${{ steps.generate_list.outputs.modules_list }}' | jq -R -s -c 'split(",") | map(. | gsub("\\s+"; ""))')
-          echo "Formatted modules_list as JSON array: $modules_list"
-          echo "modules_list=$modules_list" >> $GITHUB_OUTPUT
+          echo "modules_list=${{ steps.generate_list.outputs.modules_list }}" >> $GITHUB_OUTPUT
 
       - name: Print formatted modules as JSON
         run: |
