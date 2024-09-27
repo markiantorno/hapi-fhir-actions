@@ -64,12 +64,12 @@ runs:
         # Run the function from the root directory
         find_modules "$root_dir"
 
-        # Trim any trailing commas (if any)
-        modules_list=$(echo "$modules_list" | sed 's/,$//')
-
-        # Prepare the JSON format with properly escaped quotes
-        json_modules_list=$(echo "[\"$(echo $modules_list | sed 's/,/\",\"/g')\"]") 
+        # Trim any trailing commas (if any) and remove newline characters
+        modules_list=$(echo "$modules_list" | tr -d '\n' | sed 's/,$//')
     
+        # Prepare the JSON format with properly escaped quotes
+        json_modules_list=$(echo "[\"$(echo $modules_list | sed 's/,/\",\"/g')\"]")
+
         # Print the found modules list for debugging
         echo "Found modules before setting output: $modules_list"
 
