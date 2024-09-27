@@ -64,6 +64,9 @@ runs:
         # Run the function from the root directory
         find_modules "$root_dir"
 
+        # Trim any trailing commas (if any)
+        modules_list=$(echo "$modules_list" | sed 's/,$//')
+
         # Print the found modules list for debugging
         echo "Found modules before setting output: $modules_list"
 
