@@ -57,6 +57,14 @@ runs:
         # Run the function from the root directory and capture the result
         modules_list=$(find_modules "$root_dir")
 
+        # Print the found modules list for debugging
+        echo "Found modules before formatting: $modules_list"
+
+        # Set the output as a comma-separated list
+        if [ -z "$modules_list" ]; then
+          echo "No modules found!"
+        fi
+
         # Set the output as a comma-separated list
         echo "modules_list=$(echo \"$modules_list\" | paste -sd ',' -)" >> $GITHUB_OUTPUT
         echo "Done compiling module list..."
