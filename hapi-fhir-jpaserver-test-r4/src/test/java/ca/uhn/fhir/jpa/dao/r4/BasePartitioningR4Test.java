@@ -55,7 +55,7 @@ public abstract class BasePartitioningR4Test extends BaseJpaR4SystemTest {
 
 	@AfterEach
 	public void after() {
-		myPartitionInterceptor.assertNoRemainingIds();
+		assertNoRemainingPartitionIds();
 
 		myPartitionSettings.setIncludePartitionInSearchHashes(new PartitionSettings().isIncludePartitionInSearchHashes());
 		myPartitionSettings.setPartitioningEnabled(new PartitionSettings().isPartitioningEnabled());
@@ -68,6 +68,10 @@ public abstract class BasePartitioningR4Test extends BaseJpaR4SystemTest {
 		myStorageSettings.setAutoCreatePlaceholderReferenceTargets(new JpaStorageSettings().isAutoCreatePlaceholderReferenceTargets());
 		myStorageSettings.setMassIngestionMode(new JpaStorageSettings().isMassIngestionMode());
 		myStorageSettings.setMatchUrlCacheEnabled(new JpaStorageSettings().getMatchUrlCache());
+	}
+
+	protected void assertNoRemainingPartitionIds() {
+		myPartitionInterceptor.assertNoRemainingIds();
 	}
 
 	@Override
@@ -89,7 +93,8 @@ public abstract class BasePartitioningR4Test extends BaseJpaR4SystemTest {
 		myPartitionId4 = 4;
 
 		myPartitionInterceptor = new MyReadWriteInterceptor();
-		mySrdInterceptorService.registerInterceptor(myPartitionInterceptor);
+
+		registerPartitionInterceptor();
 
 		myPartitionConfigSvc.createPartition(new PartitionEntity().setId(myPartitionId).setName(PARTITION_1), null);
 		myPartitionConfigSvc.createPartition(new PartitionEntity().setId(myPartitionId2).setName(PARTITION_2), null);
@@ -106,6 +111,11 @@ public abstract class BasePartitioningR4Test extends BaseJpaR4SystemTest {
 		for (int i = 1; i <= 4; i++) {
 			myPartitionConfigSvc.getPartitionById(i);
 		}
+
+	}
+
+	protected void registerPartitionInterceptor() {
+		mySrdInterceptorService.registerInterceptor(myPartitionInterceptor);
 	}
 
 	@Override
@@ -125,10 +135,10 @@ public abstract class BasePartitioningR4Test extends BaseJpaR4SystemTest {
 		addCreateDefaultPartition();
 		addReadDefaultPartition(); // one for search param validation
 		SearchParameter sp = new SearchParameter();
-		sp.setId("SearchParameter/patient-birthdate");
-		sp.setType(Enumerations.SearchParamType.DATE);
-		sp.setCode("birthdate");
-		sp.setExpression("Patient.birthDate");
+		sp.setId("SearchParameter/patient-gender");
+		sp.setType(Enumerations.SearchParamType.TOKEN);
+		sp.setCode("gender");
+		sp.setExpression("Patient.gender");
 		sp.setStatus(Enumerations.PublicationStatus.ACTIVE);
 		sp.addBase("Patient");
 		mySearchParameterDao.update(sp, mySrd);
@@ -146,13 +156,13 @@ public abstract class BasePartitioningR4Test extends BaseJpaR4SystemTest {
 
 		addCreateDefaultPartition();
 		sp = new SearchParameter();
-		sp.setId("SearchParameter/patient-birthdate-unique");
+		sp.setId("SearchParameter/patient-gender-family-unique");
 		sp.setType(Enumerations.SearchParamType.COMPOSITE);
 		sp.setStatus(Enumerations.PublicationStatus.ACTIVE);
 		sp.addBase("Patient");
 		sp.addComponent()
 			.setExpression("Patient")
-			.setDefinition("SearchParameter/patient-birthdate");
+			.setDefinition("SearchParameter/patient-gender");
 		sp.addComponent()
 			.setExpression("Patient")
 			.setDefinition("SearchParameter/patient-family");
