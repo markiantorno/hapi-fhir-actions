@@ -42,7 +42,7 @@ runs:
           local current_dir=$1
           for dir in "$current_dir"/*/; do
             if [[ -f "$dir/pom.xml" ]]; then
-              module_name=$(basename "$dir")
+              module_name=$(basename "$dir" | tr -d '\n')  # Ensure no newline characters
               relative_path=$(realpath --relative-to="$root_dir" "$dir")
 
               # Check if the module is ignored
