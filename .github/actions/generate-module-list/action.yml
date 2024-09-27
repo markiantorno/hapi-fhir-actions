@@ -7,6 +7,7 @@ inputs:
 outputs:
   modules_list:
     description: 'The generated comma-separated list of Maven modules'
+    value: ${{ steps.list_modules.outputs.modules_list }}
 
 runs:
   using: 'composite'
