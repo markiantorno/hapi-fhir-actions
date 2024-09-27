@@ -35,6 +35,7 @@ runs:
         root_dir=$(pwd)
         ignored_modules="${{ inputs.ignored_modules }}"  # The ignored modules list
         ignored_modules_array=(${ignored_modules//,/ })   # Convert to an array
+        modules_list=""
 
         # Function to recursively find modules and maintain the directory structure
         find_modules() {
@@ -46,7 +47,12 @@ runs:
 
               # Check if the module is ignored
               if [[ ! " ${ignored_modules_array[@]} " =~ " $module_name " ]]; then
-                echo "$relative_path"  # Store the full path relative to the root
+                # Add the module to the list, separating with a comma if necessary
+                if [ -z "$modules_list" ]; then
+                  modules_list="$relative_path"
+                else
+                  modules_list="$modules_list,$relative_path"
+                fi
               fi
 
               # Recursively check for submodules
@@ -55,19 +61,19 @@ runs:
           done
         }
 
-        # Run the function from the root directory and capture the result
-        modules_list=$(find_modules "$root_dir")
+        # Run the function from the root directory
+        find_modules "$root_dir"
 
         # Print the found modules list for debugging
-        echo "Found modules before formatting: $modules_list"
+        echo "Found modules before setting output: $modules_list"
 
-        # Set the output as a comma-separated list
+        # Check if list is empty
         if [ -z "$modules_list" ]; then
           echo "No modules found!"
         fi
 
         # Set the output as a comma-separated list
-        echo "modules_list=$(echo \"$modules_list\" | paste -sd ',' -)" >> $GITHUB_OUTPUT
+        echo "modules_list=$modules_list" >> $GITHUB_OUTPUT
         echo "Done compiling module list..."
 
     - name: Debug - Print modules in a newline-separated list
