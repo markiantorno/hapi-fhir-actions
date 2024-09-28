@@ -29,6 +29,7 @@ runs:
           ${{ runner.os }}-maven-
 
     - name: Populate Cache with Remote Dependencies
+      shell: bash      
       if: steps.cache-maven.outputs.cache-hit != 'true'
       env:
         MAVEN_CACHE_FOLDER: ${{ inputs.cache-path }}
@@ -38,6 +39,7 @@ runs:
           -Dstyle.color=always -Djansi.force=true
 
     - name: Build with Maven
+      shell: bash   
       if: steps.cache-maven.outputs.cache-hit != 'true'
       env:
         MAVEN_CACHE_FOLDER: ${{ inputs.cache-path }}
@@ -53,6 +55,7 @@ runs:
 
     # Debug cache hit
     - name: Cache Hit or Miss
+      shell: bash   
       run: |
         if [[ "${{ steps.cache-maven.outputs.cache-hit }}" == "true" ]]; then
           echo "Cache hit, skipping dependency resolution.";
