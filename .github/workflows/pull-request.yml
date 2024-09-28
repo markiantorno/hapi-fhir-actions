@@ -100,6 +100,7 @@ jobs:
       matrix:
         module: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
       max-parallel: 256
+      fail-fast: false
         
     steps:
     - name: Checkout repository
