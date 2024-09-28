@@ -64,12 +64,12 @@ runs:
         # Run the function from the root directory
         find_modules "$root_dir"
     
-        # Remove any newline characters and trailing spaces
-        modules_list=$(echo "$modules_list" | tr -d '\n' | xargs)
-    
-        # Use jq to format the modules list as a JSON array, ensuring no trailing newlines
+        # Remove any trailing newline characters and extra spaces
+        modules_list=$(echo "$modules_list" | sed 's/[[:space:]]*$//;s/\n$//')
+        
+        # Use jq to format the modules list as a JSON array
         json_modules_list=$(jq -R -s -c 'split(",")' <<< "$modules_list")
-    
+        
         # Print the found modules list for debugging
         echo "Found modules before setting output: $modules_list"
         echo "Formatted JSON Array: $json_modules_list"
