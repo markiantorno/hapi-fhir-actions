@@ -42,7 +42,7 @@ runs:
           local current_dir=$1
           for dir in "$current_dir"/*/; do
             if [[ -f "$dir/pom.xml" ]]; then
-              module_name=$(basename "$dir" | tr -d '\n' | xargs)  # Remove trailing spaces/newlines
+              module_name=$(basename "$dir" | tr -d '\n')  # Ensure no newline characters
               relative_path=$(realpath --relative-to="$root_dir" "$dir")
     
               # Check if the module is ignored
@@ -64,11 +64,11 @@ runs:
         # Run the function from the root directory
         find_modules "$root_dir"
     
-        # Remove any newline characters and extra spaces
+        # Remove any newline characters and trailing spaces
         modules_list=$(echo "$modules_list" | tr -d '\n' | xargs)
     
         # Use jq to format the modules list as a JSON array, ensuring no trailing newlines
-        json_modules_list=$(echo "$modules_list" | jq -R -s -c 'split(",")')
+        json_modules_list=$(jq -R -s -c 'split(",")' <<< "$modules_list")
     
         # Print the found modules list for debugging
         echo "Found modules before setting output: $modules_list"
