@@ -60,15 +60,16 @@ runs:
             fi
           done
         }
-
+        
         # Run the function from the root directory
         find_modules "$root_dir"
 
-        # Trim any trailing commas (if any) and remove newline characters
-        modules_list=$(echo "$modules_list" | tr -d '\n' | sed 's/,$//')
-    
+        # Remove any newline characters
+        modules_list=$(echo "$modules_list" | tr -d '\n')
+
         # Prepare the JSON format with properly escaped quotes
-        json_modules_list=$(echo "[\"$(echo $modules_list | sed 's/,/\",\"/g')\"]")
+        json_modules_list=$(echo "$modules_list" | sed 's/,/\",\"/g')
+        json_modules_list="[\"$json_modules_list\"]"
 
         # Print the found modules list for debugging
         echo "Found modules before setting output: $modules_list"
