@@ -70,13 +70,13 @@ runs:
         # Use jq to format the modules list as a JSON array
         json_modules_list=$(jq -R -s -c 'split(",")' <<< "$modules_list")
         
-        # Remove any trailing newline characters from the JSON output
-        json_modules_list=$(echo "$json_modules_list" | tr -d '\n')
+        # Remove trailing newline characters from the JSON output
+        json_modules_list=$(echo "$json_modules_list" | tr -d '\n' | sed 's/[[:space:]]*$//')
         
         # Print the found modules list for debugging
         echo "Found modules before setting output: $modules_list"
-        echo "Formatted JSON output Array: $json_modules_list"
-    
+        echo "Formatted output JSON Array: $json_modules_list"
+            
         # Check if list is empty
         if [ -z "$modules_list" ]; then
           echo "No modules found!"
