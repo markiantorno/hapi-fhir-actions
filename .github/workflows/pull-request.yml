@@ -109,11 +109,9 @@ jobs:
     - name: Clean Module Name
       id: module_name
       run: |
-        if [[ "${{ matrix.module }}" == */* ]]; then
-          cleaned_name="${{ matrix.module##*/ }}"
-        else
-          cleaned_name="${{ matrix.module }}"
-        fi
+        module_name="${{ matrix.module }}"
+        # Use basename to get the part after the last '/'
+        cleaned_name=$(basename "$module_name")
         echo "CLEANED_NAME=$cleaned_name" >> $GITHUB_ENV
     
     - name: Publish Target Directory
