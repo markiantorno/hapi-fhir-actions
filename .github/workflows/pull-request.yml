@@ -110,9 +110,11 @@ jobs:
       id: module_name
       run: |
         if [[ "${{ matrix.module }}" == */* ]]; then
-          echo "cleaned_name=${{ matrix.module##*/ }}" >> $GITHUB_ENV
+          cleaned_name="${{ matrix.module##*/ }}"
         else
-          echo "cleaned_name=${{ matrix.module }}" >> $GITHUB_ENV
+          cleaned_name="${{ matrix.module }}"
+        fi
+        echo "CLEANED_NAME=$cleaned_name" >> $GITHUB_ENV
     
     - name: Publish Target Directory
       uses: actions/upload-artifact@v3
