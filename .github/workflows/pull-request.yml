@@ -104,9 +104,18 @@ jobs:
       with:
         name: ${{ matrix.module }}_full_logs_${{ github.run_id }}_${{ github.run_number }}
         path: ${{ github.workspace }}/artifacts
+
+    # Step to handle the module name and clean it
+    - name: Clean Module Name
+      id: module_name
+      run: |
+        if [[ "${{ matrix.module }}" == */* ]]; then
+          echo "cleaned_name=${{ matrix.module##*/ }}" >> $GITHUB_ENV
+        else
+          echo "cleaned_name=${{ matrix.module }}" >> $GITHUB_ENV
     
     - name: Publish Target Directory
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.module }}_target
+        name: ${{ steps.module_name.outputs.cleaned_name }}_target
         path: ${{ github.workspace }}/${{ matrix.module }}/target
