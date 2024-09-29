@@ -100,7 +100,7 @@ jobs:
         find . -name '*-reports/*.txt' -exec cp {} ${{ github.workspace }}/artifacts \;
       
     - name: Upload Full Test Logs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.module }}_full_logs_${{ github.run_id }}_${{ github.run_number }}
         path: ${{ github.workspace }}/artifacts
@@ -115,7 +115,7 @@ jobs:
         echo "CLEANED_NAME=$cleaned_name" >> $GITHUB_ENV
     
     - name: Publish Target Directory
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.module_name.outputs.cleaned_name }}_target
         path: ${{ github.workspace }}/${{ matrix.module }}/target
