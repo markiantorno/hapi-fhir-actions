@@ -43,7 +43,7 @@ jobs:
           echo "Formatted JSON Array:"
           echo "${{ steps.format_modules.outputs.modules_list }}"
 
-  build-module:
+  test-module:
     runs-on: ubuntu-latest
     needs: 
       - build_cache
@@ -121,3 +121,12 @@ jobs:
       with:
         name: ${{ steps.clean_module_name.outputs.cleaned_name }}_target
         path: ${{ github.workspace }}/${{ matrix.module }}/target
+
+  assemble-test-reports:
+    runs-on: ubuntu-latest
+    needs: 
+      - test-module
+
+    steps:
+      - name: Echo branch name
+        run: echo "${{ github.ref_name }}"
