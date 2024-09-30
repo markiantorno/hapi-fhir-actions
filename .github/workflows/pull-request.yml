@@ -51,7 +51,8 @@ jobs:
 
     strategy:
       matrix:
-        module: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
+        module: [ "hapi-fhir-converter", "hapi-fhir-client", "hapi-fhir-jpaserver-model" ] 
+        # module: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
       max-parallel: 256
       fail-fast: false
         
@@ -134,6 +135,70 @@ jobs:
     needs: 
       - test-module
 
+    strategy:
+      matrix:
+        module: [ "hapi-fhir-converter", "hapi-fhir-client", "hapi-fhir-jpaserver-model" ] 
+        # module: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
+      max-parallel: 256
+      fail-fast: false
+      
     steps:
-      - name: Echo branch name
-        run: echo "${{ github.ref_name }}"
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Create target directory
+        run: mkdir -p ${{ github.workspace }}/${{ matrix.module }}/target
+  
+      # Step to handle the module name and clean it
+      - name: Clean Module Name
+        id: clean_module_name
+        run: |
+          module_name="${{ matrix.module }}"
+          # Use basename to get the part after the last '/'
+          cleaned_name=$(basename "$module_name")
+          echo "Cleaned name = $cleaned_name"
+          # Set the output for this step by writing to GITHUB_OUTPUT
+          echo "cleaned_name=$cleaned_name" >> $GITHUB_OUTPUT
+
+      - name: Download Jacoco test coverage result for ${{ matrix.module }}
+        uses: actions/download-artifact@v3
+        continue-on-error: true
+        with:
+          name: ${{ steps.clean_module_name.outputs.cleaned_name }}_target
+          path: ${{ github.workspace }}/
+
+      - name: Copy files to final target directory
+        run: |
+          cp -r ${{ github.workspace }}/${{ steps.clean_module_name.outputs.cleaned_name }}_target/** ${{ github.workspace }}/${{ matrix.module }}/target/
+        if: always()
+
+      - name: Generate Jacoco aggregate report
+        shell: bash
+        env:
+          MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
+        run: |
+          mvn jacoco:report-aggregate -P JACOCO -f ${{ github.workspace }}/pom.xml
+
+      - name: Upload coverage to Codecov
+        run: |
+          curl -Os https://uploader.codecov.io/latest/linux/codecov
+          chmod +x codecov
+          ./codecov -t ${{ secrets.CODECOV_TOKEN }} -R ${{ github.workspace }}/target/site/jacoco-aggregate/
+        shell: bash
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Publish test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-test-results
+          path: '**/TEST-*.xml'
+
+      - name: Publish code coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage
+          path: ${{ github.workspace }}/target/site/jacoco-aggregate/jacoco.xml
+          fail_if_coverage_empty: true
