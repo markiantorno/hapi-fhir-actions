@@ -44,12 +44,14 @@ runs:
           -Dstyle.color=always -Djansi.force=true
 
     - name: Copy test log files
+      shell: bash
       run: |
         mkdir -p ${{ github.workspace }}/artifacts
         find . -wholename '**/target/*-reports/*.txt' -exec cp {} ${{ github.workspace }}/artifacts \;
 
     - name: Clean Module Name
       id: clean_module_name
+      shell: bash
       run: |
         module_name="${{ inputs.module-name }}"
         cleaned_name=$(basename "$module_name")
