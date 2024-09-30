@@ -112,6 +112,7 @@ jobs:
         module_name="${{ matrix.module }}"
         # Use basename to get the part after the last '/'
         cleaned_name=$(basename "$module_name")
+        echo "Cleaned name = $cleaned_name"
         echo "CLEANED_NAME=$cleaned_name" >> $GITHUB_ENV
     
     - name: Publish Target Directory
