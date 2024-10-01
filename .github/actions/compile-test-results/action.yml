@@ -13,10 +13,9 @@ runs:
     - name: Pre-process modules and name
       shell: bash
       run: |
-        modules=${{ inputs.modules }}
-        echo "Processing modules: $modules"
+        # Loop through each module using jq to parse the JSON input correctly
         for module in $(echo "$modules" | jq -r '.[]'); do
-          echo "Processing $module"
+          echo "Processing module: $module"
           
           # Create the target directory
           mkdir -p "${GITHUB_WORKSPACE}/$module/target"
@@ -30,10 +29,15 @@ runs:
           ls "${GITHUB_WORKSPACE}/${module}/target/"
           
           # Call the action to download the artifact for each module
-          echo "::set-output name=cleaned_name::$cleaned_name"
+          echo "Downloading artifact for $cleaned_name..."
+          # Use the cleaned_name to download the artifact
+          actions/download-artifact@v4:
+            name: "${cleaned_name}_target"
+            path: "${GITHUB_WORKSPACE}/${module}/target/"
+        done
           
-    - name: Download Jacoco test coverage result for each module
-      uses: actions/download-artifact@v4
-      with:
-        name: ${{ steps.clean_module_name.outputs.cleaned_name }}_target
-        path: ${{ github.workspace }}/${{ matrix.module }}/target/
+    # - name: Download Jacoco test coverage result for each module
+    #   uses: actions/download-artifact@v4
+    #   with:
+    #     name: ${{ steps.clean_module_name.outputs.cleaned_name }}_target
+    #     path: ${{ github.workspace }}/${{ matrix.module }}/target/
