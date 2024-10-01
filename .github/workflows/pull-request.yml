@@ -153,6 +153,7 @@ jobs:
         uses: ./.github/actions/compile-test-results
         with:
           modules: '["hapi-fhir-converter", "hapi-fhir-client", "hapi-fhir-jpaserver-model"]'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           # modules: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
 
       - name: print target contents
