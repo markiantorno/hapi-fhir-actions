@@ -167,17 +167,21 @@ jobs:
         continue-on-error: true
         with:
           name: ${{ steps.clean_module_name.outputs.cleaned_name }}_target
-          path: ${{ github.workspace }}/
+          path: ${{ github.workspace }}/${{ matrix.module }}/target/
           
       - name: Debug ls
         run: |
           ls ${{ github.workspace }}/
-          
-      - name: Unzip and copy files to final target directory
+
+      - name: Debug ls target dir
         run: |
-          unzip -q ${{ github.workspace }}/${{ steps.clean_module_name.outputs.cleaned_name }}_target.zip -d ${{ github.workspace }}/${{ matrix.module }}_target
-          cp -r ${{ github.workspace }}/${{ matrix.module }}_target/** ${{ github.workspace }}/${{ matrix.module }}/target/
-        if: always()
+          ls ${{ github.workspace }}/${{ matrix.module }}/target/
+          
+      # - name: Unzip and copy files to final target directory
+      #   run: |
+      #     unzip -q ${{ github.workspace }}/${{ steps.clean_module_name.outputs.cleaned_name }}_target.zip -d ${{ github.workspace }}/${{ matrix.module }}_target
+      #     cp -r ${{ github.workspace }}/${{ matrix.module }}_target/** ${{ github.workspace }}/${{ matrix.module }}/target/
+      #   if: always()
 
       # - name: Copy files to final target directory
       #   run: |
