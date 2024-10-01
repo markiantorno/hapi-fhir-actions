@@ -41,7 +41,7 @@ runs:
           gh api \
             -H "Authorization: token $GH_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
-            "/repos/${{ github.repository }}/actions/artifacts/${cleaned_name}_target/zip" > "${GITHUB_WORKSPACE}/${module}/target/${cleaned_name}_target.zip"
+            "/repos/${{ github.repository }}/actions/artifacts/${cleaned_name}_target" > "${GITHUB_WORKSPACE}/${module}/target/${cleaned_name}_target.zip"
           
           # Unzip the artifact
           unzip "${GITHUB_WORKSPACE}/${module}/target/${cleaned_name}_target.zip" -d "${GITHUB_WORKSPACE}/${module}/target/"
