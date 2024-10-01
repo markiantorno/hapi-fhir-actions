@@ -174,6 +174,12 @@ jobs:
           cp -r ${{ github.workspace }}/${{ steps.clean_module_name.outputs.cleaned_name }}_target/** ${{ github.workspace }}/${{ matrix.module }}/target/
         if: always()
 
+      - name: Unzip and copy files to final target directory
+        run: |
+          unzip -q ${{ github.workspace }}/${{ matrix.module }}_target.zip -d ${{ github.workspace }}/${{ matrix.module }}_target
+          cp -r ${{ github.workspace }}/${{ matrix.module }}_target/** ${{ github.workspace }}/${{ matrix.module }}/target/
+        if: always()
+
       - name: Generate Jacoco aggregate report
         shell: bash
         env:
