@@ -17,7 +17,7 @@ runs:
         echo "Processing modules: $modules"
         
         # Loop through each module using jq to parse the JSON input correctly
-        for module in $(echo "$modules" | jq -r '.[]'); do
+        echo "$modules" | jq -c '.[]' | while read -r module; do
           echo "Processing module: $module"
           
           # Create the target directory for each module
