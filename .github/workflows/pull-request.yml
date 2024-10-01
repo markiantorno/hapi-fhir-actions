@@ -148,45 +148,11 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Create target directory
-        run: mkdir -p ${{ github.workspace }}/${{ matrix.module }}/target
-  
-      # Step to handle the module name and clean it
-      - name: Clean Module Name
-        id: clean_module_name
-        run: |
-          module_name="${{ matrix.module }}"
-          # Use basename to get the part after the last '/'
-          cleaned_name=$(basename "$module_name")
-          echo "Cleaned name = $cleaned_name"
-          # Set the output for this step by writing to GITHUB_OUTPUT
-          echo "cleaned_name=$cleaned_name" >> $GITHUB_OUTPUT
-
-      - name: Download Jacoco test coverage result for ${{ matrix.module }}
-        uses: actions/download-artifact@v4
-        continue-on-error: true
+      - name: compile-test-results
+        uses: ./.github/actions/compile-test-results
         with:
-          name: ${{ steps.clean_module_name.outputs.cleaned_name }}_target
-          path: ${{ github.workspace }}/${{ matrix.module }}/target/
-          
-      - name: Debug ls
-        run: |
-          ls ${{ github.workspace }}/
-
-      - name: Debug ls target dir
-        run: |
-          ls ${{ github.workspace }}/${{ matrix.module }}/target/
-          
-      # - name: Unzip and copy files to final target directory
-      #   run: |
-      #     unzip -q ${{ github.workspace }}/${{ steps.clean_module_name.outputs.cleaned_name }}_target.zip -d ${{ github.workspace }}/${{ matrix.module }}_target
-      #     cp -r ${{ github.workspace }}/${{ matrix.module }}_target/** ${{ github.workspace }}/${{ matrix.module }}/target/
-      #   if: always()
-
-      # - name: Copy files to final target directory
-      #   run: |
-      #     cp -r ${{ github.workspace }}/${{ steps.clean_module_name.outputs.cleaned_name }}_target/** ${{ github.workspace }}/${{ matrix.module }}/target/
-      #   if: always()
+          modules: '["hapi-fhir-converter", "hapi-fhir-client", "hapi-fhir-jpaserver-model"]'
+          # modules: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
 
       - name: Generate Jacoco aggregate report
         shell: bash
