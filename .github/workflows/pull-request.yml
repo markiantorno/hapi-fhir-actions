@@ -168,7 +168,11 @@ jobs:
         with:
           name: ${{ steps.clean_module_name.outputs.cleaned_name }}_target
           path: ${{ github.workspace }}/
-
+          
+      - name: Debug ls
+        run: |
+          ls ${{ github.workspace }}/
+          
       - name: Unzip and copy files to final target directory
         run: |
           unzip -q ${{ github.workspace }}/${{ steps.clean_module_name.outputs.cleaned_name }}_target.zip -d ${{ github.workspace }}/${{ matrix.module }}_target
