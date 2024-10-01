@@ -10,6 +10,14 @@ inputs:
 runs:
   using: "composite"
   steps:
+    
+    - name: Set up GitHub token for API calls
+      shell: bash
+      run: |
+        # Set the GH_TOKEN environment variable
+        export GH_TOKEN="${{ github.token }}"
+        echo "GitHub token is set."
+    
     - name: Iterate through modules and download artifacts
       shell: bash
       run: |
@@ -41,7 +49,10 @@ runs:
           echo "Listing target directory for $module:"
           ls "${GITHUB_WORKSPACE}/${module}/target/"
         done
-    
+        
+env:
+  GH_TOKEN: ${{ github.token }}
+  
     # - name: Download Jacoco test coverage result for each module
     #   uses: actions/download-artifact@v4
     #   with:
