@@ -36,10 +36,15 @@ runs:
             path: "${GITHUB_WORKSPACE}/${module}/target/"
         done
     
-    - name: Pre-process modules and name
+    - name: project dir
       shell: bash
       run: |
-        ls -r ${GITHUB_WORKSPACE}/$module/
+        ls -r "${GITHUB_WORKSPACE}/$module/"
+        
+    - name: target dir
+      shell: bash
+      run: |
+        ls -r "${GITHUB_WORKSPACE}/$module/target"
     # - name: Download Jacoco test coverage result for each module
     #   uses: actions/download-artifact@v4
     #   with:
