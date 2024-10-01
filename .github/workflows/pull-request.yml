@@ -155,6 +155,9 @@ jobs:
           modules: '["hapi-fhir-converter", "hapi-fhir-client", "hapi-fhir-jpaserver-model"]'
           # modules: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
 
+      - name: print target contents
+        run: ls "${{ github.workspace }}/hapi-fhir-converter/target"
+
       - name: Generate Jacoco aggregate report
         shell: bash
         env:
