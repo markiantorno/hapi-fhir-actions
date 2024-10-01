@@ -140,6 +140,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          
+      - name: Restore Maven cache
+        uses: actions/cache@v4
+        with:
+          path: $HOME/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-
 
       - name: Compile all previously generated reports
         uses: ./.github/actions/compile-test-results
@@ -150,9 +158,11 @@ jobs:
       - name: Generate Jacoco aggregate report
         shell: bash
         env:
+          MAVEN_CACHE_FOLDER: $HOME/.m2/repository  
           MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
         run: |
-          mvn jacoco:report-aggregate -P JACOCO -f ${{ github.workspace }}/pom.xml
+          mvn jacoco:report-aggregate -P JACOCO -f ${{ github.workspace }}/pom.xml \
+          -Dmaven.repo.local=$MAVEN_CACHE_FOLDER
 
       - name: Upload coverage to Codecov
         run: |
