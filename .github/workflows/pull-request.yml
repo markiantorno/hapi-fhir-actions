@@ -51,8 +51,8 @@ jobs:
 
     strategy:
       matrix:
-        module: [ "hapi-fhir-converter", "hapi-fhir-client", "hapi-fhir-jpaserver-model" ] 
-        # module: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
+        # module: [ "hapi-fhir-converter", "hapi-fhir-client", "hapi-fhir-jpaserver-model" ] 
+        module: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
       max-parallel: 256
       fail-fast: false
         
@@ -152,9 +152,9 @@ jobs:
       - name: Compile all previously generated reports
         uses: ./.github/actions/compile-test-results
         with:
-          modules: '["hapi-fhir-converter", "hapi-fhir-client", "hapi-fhir-jpaserver-model"]'
+          # modules: '["hapi-fhir-converter", "hapi-fhir-client", "hapi-fhir-jpaserver-model"]'
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          # modules: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
+          modules: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
 
       - name: print target contents
         run: ls "${{ github.workspace }}/hapi-fhir-converter/target"
