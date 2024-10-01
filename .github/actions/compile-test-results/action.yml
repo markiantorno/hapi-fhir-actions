@@ -10,12 +10,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 1
-
-    - name: Process modules
+    - name: Pre-process modules and name
       shell: bash
       run: |
         modules=${{ inputs.modules }}
