@@ -35,7 +35,12 @@ runs:
           # Clean Module Name (basename logic)
           cleaned_name=$(basename "$module")
           echo "Cleaned module name: $cleaned_name"
-          
+
+          gh api \
+            -H "Authorization: token $GH_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "/repos/${{ github.repository }}/actions/artifacts"
+    
           # Download the artifact for the cleaned name using GH_TOKEN
           echo "Downloading artifact for $cleaned_name..."
           gh api \
