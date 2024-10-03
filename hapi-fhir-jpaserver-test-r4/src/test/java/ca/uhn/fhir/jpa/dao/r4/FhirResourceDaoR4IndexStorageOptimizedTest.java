@@ -70,7 +70,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * $reindex operation will correctly null/recover sp_name, res_type, sp_updated parameters
  * of ResourceIndexedSearchParam entities.
  */
-public class FhirResourceDaoR4IndexStorageOptimizedIT extends BaseJpaR4Test {
+public class FhirResourceDaoR4IndexStorageOptimizedTest extends BaseJpaR4Test {
 
 	@Autowired
 	private IJobCoordinator myJobCoordinator;
