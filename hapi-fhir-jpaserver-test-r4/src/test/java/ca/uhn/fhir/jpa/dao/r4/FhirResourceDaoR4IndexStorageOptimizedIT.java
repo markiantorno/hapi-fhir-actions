@@ -1,7 +1,6 @@
 package ca.uhn.fhir.jpa.dao.r4;
 
 import ca.uhn.fhir.batch2.api.IJobCoordinator;
-import ca.uhn.fhir.batch2.jobs.reindex.ReindexAppCtx;
 import ca.uhn.fhir.batch2.jobs.reindex.ReindexJobParameters;
 import ca.uhn.fhir.batch2.model.JobInstanceStartRequest;
 import ca.uhn.fhir.context.ConfigurationException;
@@ -71,7 +70,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * $reindex operation will correctly null/recover sp_name, res_type, sp_updated parameters
  * of ResourceIndexedSearchParam entities.
  */
-public class FhirResourceDaoR4IndexStorageOptimizedTest extends BaseJpaR4Test {
+public class FhirResourceDaoR4IndexStorageOptimizedIT extends BaseJpaR4Test {
 
 	@Autowired
 	private IJobCoordinator myJobCoordinator;
