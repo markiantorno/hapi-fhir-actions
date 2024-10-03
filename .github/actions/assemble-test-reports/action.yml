@@ -34,10 +34,6 @@ runs:
         github_token: ${{ inputs.github_token }}
         modules: ${{ inputs.modules }}
 
-    - name: Print target contents
-      shell: bash
-      run: ls "${{ github.workspace }}/hapi-fhir-converter/target"
-
     - name: Generate Jacoco aggregate report
       shell: bash
       env:
