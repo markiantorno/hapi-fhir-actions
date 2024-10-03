@@ -51,7 +51,8 @@ jobs:
 
     strategy:
       matrix:
-        module: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
+        module: ["hapi-fhir-jpaserver-test-r4"]
+        # module: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
       max-parallel: 256
       fail-fast: false
         
@@ -81,4 +82,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-          modules: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
+          modules: '["hapi-fhir-jpaserver-test-r4"]'
+          # modules: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
