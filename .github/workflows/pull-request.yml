@@ -57,6 +57,7 @@ jobs:
       fail-fast: false
         
     steps:
+    # Step to check out the repository, which includes local actions
     - name: Checkout repository
       uses: actions/checkout@v4
 
@@ -73,6 +74,10 @@ jobs:
       - test-module
 
     steps:
+      # Step to check out the repository, which includes local actions
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
       - uses: ./.github/actions/assemble-test-reports
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
