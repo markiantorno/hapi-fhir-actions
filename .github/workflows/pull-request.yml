@@ -73,12 +73,14 @@ jobs:
       - test-module
 
     steps:
-      - uses: ./.github/actions/assemble-and-publish-test-reports
+      - uses: ./.github/actions/assemble-test-reports
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-          # modules: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
           modules: '[ "hapi-fhir-converter", "hapi-fhir-client", "hapi-fhir-jpaserver-model" ]' 
+
+          # modules: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
+
 
   # assemble-test-reports:
   #   runs-on: ubuntu-latest
