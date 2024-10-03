@@ -47,6 +47,7 @@ runs:
         -Dmaven.repo.local=$MAVEN_CACHE_FOLDER
 
     - name: Upload coverage to Codecov
+      shell: bash
       run: |
         curl -Os https://uploader.codecov.io/latest/linux/codecov
         chmod +x codecov
