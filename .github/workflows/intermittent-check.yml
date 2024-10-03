@@ -31,6 +31,7 @@ jobs:
         run: |
           git fetch origin master
 
+          # Get modified or added test files from src/test/java across modules
           new_test_files=$(git diff --name-only origin/master | grep 'src/test/java/.*\(Test\|IT\).java' || true)
 
           if [ -z "$new_test_files" ]; then
@@ -51,11 +52,11 @@ jobs:
 
             module_dir=$(echo "$file" | sed -E 's|/src/test/java/.*||')
             
-            test_diff=$(git diff origin/master -- "$file" | grep -E '^\+.*('$JUNIT_ANNOTATIONS')' -A 5 | grep -E 'public.*void\s+(\w+)\s*\(' || true)
+            # Read the whole modified file and search for methods with JUnit annotations
+            test_methods=$(grep -Pzo "(?s)($JUNIT_ANNOTATIONS).*?\s+public\s+.*?(\w+)\s*\(" "$file" | grep -oP 'public.*\K\w+(?=\s*\()')
 
-            if [ -n "$test_diff" ]; then
-              methods=$(echo "$test_diff" | grep -oP 'public.*void\s+\K\w+')
-              for method in $methods; do
+            if [ -n "$test_methods" ]; then
+              for method in $test_methods; do
                 new_tests="$new_tests $module_dir:$file:$method"
               done
             fi
