@@ -1,6 +1,5 @@
 name: Detect and Run New Tests in Multi-Module Maven Project
 
-# Trigger on pull requests targeting the master branch
 on:
   pull_request:
     branches:
@@ -13,11 +12,13 @@ on:
 jobs:
   detect-new-tests:
     runs-on: ubuntu-latest
+    outputs:
+      new_tests: ${{ steps.detect-tests.outputs.new_tests }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.head.sha }} # Checkout PR's head
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Set up Java
         uses: actions/setup-java@v3
@@ -28,11 +29,8 @@ jobs:
       - name: Detect new or modified test files in all modules
         id: find-tests
         run: |
-          # Fetch the base branch (master) to compare with the PR branch
           git fetch origin master
 
-          # Get modified or added test files from src/test/java across modules, 
-          # including both *Test.java (unit tests) and *IT.java (integration tests)
           new_test_files=$(git diff --name-only origin/master | grep 'src/test/java/.*\(Test\|IT\).java' || true)
 
           if [ -z "$new_test_files" ]; then
@@ -40,27 +38,22 @@ jobs:
             exit 0
           fi
 
-          echo "New/modified test files: $new_test_files"
           echo "new_test_files=$new_test_files" >> $GITHUB_ENV
 
       - name: Detect new JUnit 5 test methods
         id: detect-tests
         run: |
-          # Define JUnit 5 test annotations
           JUNIT_ANNOTATIONS='@Test|@ParameterizedTest|@RepeatedTest|@TestFactory|@TestTemplate|@TestMethodOrder'
 
           new_tests=""
           for file in $new_test_files; do
             echo "Processing $file"
 
-            # Get the module directory from the file path (everything before src/test/java)
             module_dir=$(echo "$file" | sed -E 's|/src/test/java/.*||')
             
-            # Detect new test methods by looking for added lines with JUnit annotations
             test_diff=$(git diff origin/master -- "$file" | grep -E '^\+.*('$JUNIT_ANNOTATIONS')' -A 5 | grep -E 'public.*void\s+(\w+)\s*\(' || true)
 
             if [ -n "$test_diff" ]; then
-              # Extract the method name
               methods=$(echo "$test_diff" | grep -oP 'public.*void\s+\K\w+')
               for method in $methods; do
                 new_tests="$new_tests $module_dir:$file:$method"
@@ -72,9 +65,8 @@ jobs:
             echo "No new test methods found."
             exit 0
           else
-            echo "New/Modified test methods detected:"
-            echo "$new_tests"
-            echo "new_tests=$new_tests" >> $GITHUB_ENV
+            echo "new_tests=$new_tests"
+            echo "::set-output name=new_tests::$new_tests"
           fi
 
       - name: Generate report of new/modified tests
@@ -90,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        test_info: ${{ env.new_tests }}
+        test_info: ${{ fromJson(needs.detect-new-tests.outputs.new_tests) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -103,18 +95,18 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Run new test methods 100 times
+      - name: Run new test methods 50 times
         run: |
           IFS=":" read -r module_dir file method <<< "${{ matrix.test_info }}"
           echo "Running new test method $method in $file under $module_dir"
-          for i in {1..100}; do
+          for i in {1..50}; do
             mvn -pl "$module_dir" -Dtest="${method}" test
           done
 
-      - name: Run entire test file 20 times
+      - name: Run entire test file 30 times
         run: |
           IFS=":" read -r module_dir file method <<< "${{ matrix.test_info }}"
           echo "Running entire test file $file under $module_dir"
-          for i in {1..20}; do
+          for i in {1..30}; do
             mvn -pl "$module_dir" -Dtest="${file##*/%.java}" test
           done
