@@ -115,7 +115,7 @@ jobs:
             # Run the new/modified test 50 times
             echo "Running $method from $file 50 times"
             for i in $(seq 1 50); do
-              mvn -f $module/pom.xml -Dtest=$method test
+              mvn -f $module/pom.xml -Dtest="$(basename $file .java)#${method}" test
             done
           done
 
