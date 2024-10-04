@@ -23,16 +23,18 @@ jobs:
       run: |
         JUNIT_ANNOTATIONS='@Test|@ParameterizedTest|@RepeatedTest|@TestFactory|@TestTemplate|@TestMethodOrder'
         new_tests=""
-
-        for file in ${{ github.event.pull_request.changed_files }}; do
+        
+        for file in $new_test_files; do  # Correct the loop to use the actual file list
           echo "Processing $file"
-          
+        
           module_dir=$(echo "$file" | sed -E 's|/src/test/java/.*||')
+          
+          # Detect the test methods with JUnit annotations
           test_methods=$(awk -v RS='' '/@Test|@ParameterizedTest|@RepeatedTest|@TestFactory|@TestTemplate|@TestMethodOrder/ {
               match($0, /public.* ([a-zA-Z0-9_]+)\(/, arr);
               if (arr[1] != "") print arr[1];
           }' "$file")
-
+        
           if [ -n "$test_methods" ]; then
             for method in $test_methods; do
               new_tests="$new_tests $module_dir:$file:$method"
