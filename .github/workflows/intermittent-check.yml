@@ -1,73 +1,140 @@
-name: Detect and Run New Tests
+name: Detect and Run New Tests in Multi-Module Maven Project
 
 on:
   pull_request:
     branches:
       - master
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 jobs:
-  detect_new_tests:
+  detect-new-tests:
     runs-on: ubuntu-latest
+    outputs:
+      new_tests: ${{ steps.detect-tests.outputs.new_tests }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+        uses: actions/checkout@v4  # Updated to v4
 
-      - name: Find new or modified tests
-        id: find_tests
+      - name: Set up Java
+        uses: actions/setup-java@v4  # Updated to v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Detect new or modified test files in all modules
+        id: find-tests
         run: |
-          JUNIT_ANNOTATIONS='@Test|@ParameterizedTest|@RepeatedTest|@TestFactory|@TestTemplate|@TestMethodOrder'
-          new_tests=""
-          echo "Detecting changes in files..."
-          new_test_files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\(Test\.java\|IT\.java\)$')
+          git fetch origin master
+
+          # Get modified or added test files from src/test/java across modules
+          new_test_files=$(git diff --name-only origin/master | grep 'src/test/java/.*\(Test\|IT\).java' || true)
 
           if [ -z "$new_test_files" ]; then
-            echo "No test files modified."
+            echo "No new or modified test files found."
             exit 0
           fi
 
-          echo "Modified test files: $new_test_files"
+          echo "new_test_files=$new_test_files" >> $GITHUB_ENV
 
+      - name: Detect new JUnit 5 test methods
+        id: detect-tests
+        run: |
+          JUNIT_ANNOTATIONS='@Test|@ParameterizedTest|@RepeatedTest|@TestFactory|@TestTemplate|@TestMethodOrder'
+
+          new_tests=""
           for file in $new_test_files; do
             echo "Processing $file"
 
             module_dir=$(echo "$file" | sed -E 's|/src/test/java/.*||')
-            if [ ! -f "$file" ]; then
-              echo "File $file does not exist."
-              continue
-            fi
 
-            test_methods=$(awk -v RS='' "/$JUNIT_ANNOTATIONS/ {
-                match(\$0, /public.* ([a-zA-Z0-9_]+)\(/, arr);
+            # Use awk to detect method names preceded by JUnit annotations
+            test_methods=$(awk -v RS='' '/@Test|@ParameterizedTest|@RepeatedTest|@TestFactory|@TestTemplate|@TestMethodOrder/ {
+                match($0, /public.* ([a-zA-Z0-9_]+)\(/, arr);
                 if (arr[1] != "") print arr[1];
-            }" "$file")
+            }' "$file")
 
             if [ -n "$test_methods" ]; then
               for method in $test_methods; do
                 new_tests="$new_tests $module_dir:$file:$method"
               done
-            else
-              echo "No test methods found in $file."
             fi
           done
 
           if [ -z "$new_tests" ]; then
-            echo "No new or modified test methods found."
-            echo "new_tests=" >> $GITHUB_ENV
+            echo "No new test methods found."
+            exit 0
           else
-            echo "New/Modified test methods detected: $new_tests"
+            # Use Environment Files to pass data to the next job
             echo "new_tests=$new_tests" >> $GITHUB_ENV
           fi
 
+  run-new-tests:
+    needs: detect-new-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Run new tests 50 times
+        run: |
+          new_tests="${{ env.new_tests }}"
+          
+          if [ -z "$new_tests" ]; then
+            echo "No new or modified test methods found."
+            exit 0
+          fi
+          
+          for test in $new_tests; do
+            module=$(echo $test | cut -d':' -f1)
+            file=$(echo $test | cut -d':' -f2)
+            method=$(echo $test | cut -d':' -f3)
+
+            # Run the new/modified test 50 times
+            echo "Running $method from $file 50 times"
+            for i in $(seq 1 50); do
+              mvn -f $module/pom.xml -Dtest=$method test
+            done
+          done
+
+      - name: Run full test files 30 times
+        run: |
+          new_tests="${{ env.new_tests }}"
+          
+          if [ -z "$new_tests" ]; then
+            echo "No new or modified test methods found."
+            exit 0
+          fi
+          
+          for test in $new_tests; do
+            module=$(echo $test | cut -d':' -f1)
+            file=$(echo $test | cut -d':' -f2)
+            
+            # Run the entire test file 30 times
+            echo "Running all tests in $file 30 times"
+            for i in $(seq 1 30); do
+              mvn -f $module/pom.xml -Dtest=$(basename $file .java) test
+            done
+          done
+
+  generate-report:
+    needs: run-new-tests
+    runs-on: ubuntu-latest
+    steps:
       - name: Generate report of new/modified tests
         run: |
-          if [ -z "${{ env.new_tests }}" ]; then
+          new_tests="${{ env.new_tests }}"
+          
+          if [ -z "$new_tests" ]; then
             echo "No new or modified test methods found."
           else
-            echo "New/Modified test methods detected: ${{ env.new_tests }}"
+            echo "New/Modified test methods detected: $new_tests"
           fi
