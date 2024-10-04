@@ -51,10 +51,12 @@ jobs:
             module_dir=$(echo "$file" | sed -E 's|/src/test/java/.*||')
 
             # Use awk to detect method names preceded by JUnit annotations
-            test_methods=$(awk -v RS='' "/$JUNIT_ANNOTATIONS/ {
-                match(\$0, /public.* ([a-zA-Z0-9_]+)\(/, arr);
+            test_methods=$(awk -v annotations="$JUNIT_ANNOTATIONS" '
+              match($0, annotations) {
+                match($0, /public.* ([a-zA-Z0-9_]+)\(/, arr);
                 if (arr[1] != "") print arr[1];
-            }" "$file")
+              }
+            ' "$file")
 
             if [ -n "$test_methods" ]; then
               echo "Detected test methods in $file: $test_methods"  # Print the detected test methods
