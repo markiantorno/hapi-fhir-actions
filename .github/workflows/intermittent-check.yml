@@ -50,11 +50,19 @@ jobs:
 
             module_dir=$(echo "$file" | sed -E 's|/src/test/java/.*||')
 
-            # Use awk to detect method names preceded by JUnit annotations
+            # Use awk to detect method names preceded by JUnit annotations, handling multiline declarations
             test_methods=$(awk -v annotations="$JUNIT_ANNOTATIONS" '
-              match($0, annotations) {
-                match($0, /public.* ([a-zA-Z0-9_]+)\(/, arr);
-                if (arr[1] != "") print arr[1];
+              BEGIN { RS=""; FS="\n" }  # Process entire file as one block of text
+              {
+                match($0, annotations)  # Check if any JUnit annotation exists in the file
+                if (RSTART) {  # If an annotation is found
+                  while (getline > 0) {  # Continue reading lines
+                    if (match($0, /public.* ([a-zA-Z0-9_]+)\(/, arr)) {
+                      print arr[1]  # Print method name when found
+                      break
+                    }
+                  }
+                }
               }
             ' "$file")
 
