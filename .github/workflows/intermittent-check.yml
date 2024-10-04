@@ -16,10 +16,10 @@ jobs:
       new_tests: ${{ steps.detect-tests.outputs.new_tests }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  # Updated to v4
+        uses: actions/checkout@v4
 
       - name: Set up Java
-        uses: actions/setup-java@v4  # Updated to v4
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -51,12 +51,13 @@ jobs:
             module_dir=$(echo "$file" | sed -E 's|/src/test/java/.*||')
 
             # Use awk to detect method names preceded by JUnit annotations
-            test_methods=$(awk -v RS='' '/@Test|@ParameterizedTest|@RepeatedTest|@TestFactory|@TestTemplate|@TestMethodOrder/ {
-                match($0, /public.* ([a-zA-Z0-9_]+)\(/, arr);
+            test_methods=$(awk -v RS='' "/$JUNIT_ANNOTATIONS/ {
+                match(\$0, /public.* ([a-zA-Z0-9_]+)\(/, arr);
                 if (arr[1] != "") print arr[1];
-            }' "$file")
+            }" "$file")
 
             if [ -n "$test_methods" ]; then
+              echo "Detected test methods in $file: $test_methods"  # Print the detected test methods
               for method in $test_methods; do
                 new_tests="$new_tests $module_dir:$file:$method"
               done
@@ -65,9 +66,9 @@ jobs:
 
           if [ -z "$new_tests" ]; then
             echo "No new test methods found."
-            exit 0
+            echo "new_tests=" >> $GITHUB_ENV
           else
-            # Use Environment Files to pass data to the next job
+            echo "New test methods detected: $new_tests"
             echo "new_tests=$new_tests" >> $GITHUB_ENV
           fi
 
