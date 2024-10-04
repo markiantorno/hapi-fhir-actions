@@ -16,10 +16,10 @@ jobs:
       new_tests: ${{ steps.detect-tests.outputs.new_tests }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # Updated to v4
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v4  # Updated to v4
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -67,12 +67,66 @@ jobs:
             echo "No new test methods found."
             exit 0
           else
-            # Save output using Environment Files (replacing set-output)
+            # Use Environment Files to pass data to the next job
             echo "new_tests=$new_tests" >> $GITHUB_ENV
           fi
 
-  generate-report:
+  run-new-tests:
     needs: detect-new-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Run new tests 50 times
+        run: |
+          new_tests="${{ env.new_tests }}"
+          
+          if [ -z "$new_tests" ]; then
+            echo "No new or modified test methods found."
+            exit 0
+          fi
+          
+          for test in $new_tests; do
+            module=$(echo $test | cut -d':' -f1)
+            file=$(echo $test | cut -d':' -f2)
+            method=$(echo $test | cut -d':' -f3)
+
+            # Run the new/modified test 50 times
+            echo "Running $method from $file 50 times"
+            for i in $(seq 1 50); do
+              mvn -f $module/pom.xml -Dtest=$method test
+            done
+          done
+
+      - name: Run full test files 30 times
+        run: |
+          new_tests="${{ env.new_tests }}"
+          
+          if [ -z "$new_tests" ]; then
+            echo "No new or modified test methods found."
+            exit 0
+          fi
+          
+          for test in $new_tests; do
+            module=$(echo $test | cut -d':' -f1)
+            file=$(echo $test | cut -d':' -f2)
+            
+            # Run the entire test file 30 times
+            echo "Running all tests in $file 30 times"
+            for i in $(seq 1 30); do
+              mvn -f $module/pom.xml -Dtest=$(basename $file .java) test
+            done
+          done
+
+  generate-report:
+    needs: run-new-tests
     runs-on: ubuntu-latest
     steps:
       - name: Generate report of new/modified tests
