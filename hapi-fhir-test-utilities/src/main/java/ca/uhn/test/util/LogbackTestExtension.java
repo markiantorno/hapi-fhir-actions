@@ -39,7 +39,7 @@ import java.util.function.Predicate;
  */
 public class LogbackTestExtension implements BeforeEachCallback, AfterEachCallback {
 	private final Logger myLogger;
-	private final Level myLevel;
+	private Level myLevel;
 	private ListAppender<ILoggingEvent> myListAppender = null;
 	private Level mySavedLevel;
 
@@ -102,10 +102,17 @@ public class LogbackTestExtension implements BeforeEachCallback, AfterEachCallba
 		setUp(myLevel);
 	}
 
+	/**
+	 * @deprecated Just use the constructor here
+	 */
+	@Deprecated
 	public void setUp(Level theLevel) {
-		myListAppender = new ListAppender<>();
-		myListAppender.start();
-		myLogger.addAppender(myListAppender);
+		myLevel = theLevel;
+		if (myListAppender == null) {
+			myListAppender = new ListAppender<>();
+			myListAppender.start();
+			myLogger.addAppender(myListAppender);
+		}
 		if (theLevel != null) {
 			mySavedLevel = myLogger.getLevel();
 			myLogger.setLevel(theLevel);
