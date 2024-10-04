@@ -51,9 +51,12 @@ jobs:
             echo "Processing $file"
 
             module_dir=$(echo "$file" | sed -E 's|/src/test/java/.*||')
-            
-            # Ensure the file is processed as text and search for methods with JUnit annotations
-            test_methods=$(grep --text -Pzo "(?s)($JUNIT_ANNOTATIONS).*?\s+public\s+.*?\s+(\w+)\s*\(" "$file" | grep -oP 'public\s+.*?\s+\K\w+(?=\s*\()')
+
+            # Use awk to detect method names preceded by JUnit annotations
+            test_methods=$(awk -v RS='' '/@Test|@ParameterizedTest|@RepeatedTest|@TestFactory|@TestTemplate|@TestMethodOrder/ {
+                match($0, /public.* ([a-zA-Z0-9_]+)\(/, arr);
+                if (arr[1] != "") print arr[1];
+            }' "$file")
 
             if [ -n "$test_methods" ]; then
               for method in $test_methods; do
