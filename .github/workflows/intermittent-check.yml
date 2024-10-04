@@ -16,7 +16,8 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '17'
-
+          distribution: 'temurin'
+          
       - name: Find new or modified tests
         id: find_tests
         run: |
