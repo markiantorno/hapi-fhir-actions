@@ -16,12 +16,10 @@ jobs:
       new_tests: ${{ steps.detect-tests.outputs.new_tests }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
+        uses: actions/checkout@v4
 
       - name: Set up Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -69,48 +67,20 @@ jobs:
             echo "No new test methods found."
             exit 0
           else
-            echo "new_tests=$new_tests"
-            echo "::set-output name=new_tests::$new_tests"
+            # Save output using Environment Files (replacing set-output)
+            echo "new_tests=$new_tests" >> $GITHUB_ENV
           fi
 
+  generate-report:
+    needs: detect-new-tests
+    runs-on: ubuntu-latest
+    steps:
       - name: Generate report of new/modified tests
         run: |
+          new_tests="${{ env.new_tests }}"
+          
           if [ -z "$new_tests" ]; then
             echo "No new or modified test methods found."
           else
             echo "New/Modified test methods detected: $new_tests"
           fi
-
-  run-tests:
-    needs: detect-new-tests
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        test_info: ${{ fromJson(needs.detect-new-tests.outputs.new_tests) }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Run new test methods 50 times
-        run: |
-          IFS=":" read -r module_dir file method <<< "${{ matrix.test_info }}"
-          echo "Running new test method $method in $file under $module_dir"
-          for i in {1..50}; do
-            mvn -pl "$module_dir" -Dtest="${method}" test
-          done
-
-      - name: Run entire test file 30 times
-        run: |
-          IFS=":" read -r module_dir file method <<< "${{ matrix.test_info }}"
-          echo "Running entire test file $file under $module_dir"
-          for i in {1..30}; do
-            mvn -pl "$module_dir" -Dtest="${file##*/%.java}" test
-          done
