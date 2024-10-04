@@ -125,6 +125,7 @@ public class LogbackTestExtension implements BeforeEachCallback, AfterEachCallba
 		myListAppender.stop();
 		if (myLevel != null) {
 			myLogger.setLevel(mySavedLevel);
+			myLevel = null;
 		}
 	}
 
