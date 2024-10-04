@@ -67,7 +67,7 @@ jobs:
             ' "$file")
 
             if [ -n "$test_methods" ]; then
-              echo "Detected test methods in $file: $test_methods"  # Print the detected test methods
+              echo "Detected test methods in $file: $test_methods"
               for method in $test_methods; do
                 new_tests="$new_tests $module_dir:$file:$method"
               done
@@ -80,7 +80,9 @@ jobs:
           else
             echo "New test methods detected: $new_tests"
             echo "new_tests=$new_tests" >> $GITHUB_ENV
-          fi
+
+          # Set output for the new tests to be used in subsequent jobs
+          echo "::set-output name=new_tests::$new_tests"
 
   run-new-tests:
     needs: detect-new-tests
@@ -97,7 +99,7 @@ jobs:
 
       - name: Run new tests 50 times
         run: |
-          new_tests="${{ env.new_tests }}"
+          new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"  # Fetch the output from previous job
           
           if [ -z "$new_tests" ]; then
             echo "No new or modified test methods found."
@@ -118,7 +120,7 @@ jobs:
 
       - name: Run full test files 30 times
         run: |
-          new_tests="${{ env.new_tests }}"
+          new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"  # Fetch the output from previous job
           
           if [ -z "$new_tests" ]; then
             echo "No new or modified test methods found."
@@ -142,7 +144,7 @@ jobs:
     steps:
       - name: Generate report of new/modified tests
         run: |
-          new_tests="${{ env.new_tests }}"
+          new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"
           
           if [ -z "$new_tests" ]; then
             echo "No new or modified test methods found."
