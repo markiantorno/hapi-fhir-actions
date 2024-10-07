@@ -171,10 +171,12 @@ jobs:
                   else
                     echo "    Method Run $(basename $log .log): PASSED"
                   fi
-                else
-                  echo "WARNING: Log file $log not found!"
                 fi
               done
+  
+              if [ $total_method_runs -eq 0 ]; then
+                echo "WARNING: No method run logs found for $method!"
+              fi
   
               echo "    Total method runs: $total_method_runs"
               echo "    Method Failures: $failed_method_runs"
@@ -194,10 +196,12 @@ jobs:
                   else
                     echo "    Class Run $(basename $log .log): PASSED"
                   fi
-                else
-                  echo "WARNING: Log file $log not found!"
                 fi
               done
+  
+              if [ $total_class_runs -eq 0 ]; then
+                echo "WARNING: No class run logs found for $(basename $file .java)!"
+              fi
   
               echo "    Total class runs: $total_class_runs"
               echo "    Class Failures: $failed_class_runs"
