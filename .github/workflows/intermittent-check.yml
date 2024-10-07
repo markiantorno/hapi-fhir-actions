@@ -102,12 +102,12 @@ jobs:
               echo "Running test method $method from $file, iteration $i"
               mvn -f $module/pom.xml -Dtest="$(basename $file .java)#${method}" test \
               | tee test-results/${method}_run_${i}.log  # Save each method run log uniquely per iteration
-              
+  
               # Check if log was created
-              if [ ! -f "test-results/${method}_run_${i}.log" ]; then
-                echo "Failed to create log for method run $i"
-              else
+              if [ -f "test-results/${method}_run_${i}.log" ]; then
                 echo "Log for method run $i created successfully"
+              else
+                echo "Log for method run $i was not created"
               fi
             done
   
@@ -116,12 +116,12 @@ jobs:
               echo "Running entire class $(basename $file .java), iteration $i"
               mvn -f $module/pom.xml -Dtest="$(basename $file .java)" test \
               | tee test-results/$(basename $file .java)_class_run_${i}.log  # Save each class run log uniquely per iteration
-              
+  
               # Check if log was created
-              if [ ! -f "test-results/$(basename $file .java)_class_run_${i}.log" ]; then
-                echo "Failed to create log for class run $i"
-              else
+              if [ -f "test-results/$(basename $file .java)_class_run_${i}.log" ]; then
                 echo "Log for class run $i created successfully"
+              else
+                echo "Log for class run $i was not created"
               fi
             done
           done
