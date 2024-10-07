@@ -97,7 +97,9 @@ jobs:
           done
 
   generate-report:
-    needs: run-new-tests
+    needs: 
+      - run-new-tests
+      - detect-new-tests
     runs-on: ubuntu-latest
     steps:
       - name: Generate report of new/modified tests
