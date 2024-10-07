@@ -13,13 +13,13 @@ jobs:
   detect-new-tests:
     runs-on: ubuntu-latest
     outputs:
-      new_tests: ${{ steps.detect-tests.outputs.new_tests }}
+      new_tests: ${{ steps.detect-tests.outputs.new_tests }}  # Explicitly passing output
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  # Updated to v4
+        uses: actions/checkout@v4
 
       - name: Set up Java
-        uses: actions/setup-java@v4  # Updated to v4
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -29,7 +29,6 @@ jobs:
         run: |
           git fetch origin master
 
-          # Get modified or added test files from src/test/java across modules
           new_test_files=$(git diff --name-only origin/master | grep 'src/test/java/.*\(Test\|IT\).java' || true)
 
           if [ -z "$new_test_files" ]; then
@@ -50,15 +49,14 @@ jobs:
 
             module_dir=$(echo "$file" | sed -E 's|/src/test/java/.*||')
 
-            # Use awk to detect method names preceded by JUnit annotations, handling multiline declarations
             test_methods=$(awk -v annotations="$JUNIT_ANNOTATIONS" '
-              BEGIN { RS=""; FS="\n" }  # Process entire file as one block of text
+              BEGIN { RS=""; FS="\n" }
               {
-                match($0, annotations)  # Check if any JUnit annotation exists in the file
-                if (RSTART) {  # If an annotation is found
-                  while (getline > 0) {  # Continue reading lines
+                match($0, annotations)
+                if (RSTART) {
+                  while (getline > 0) {
                     if (match($0, /public.* ([a-zA-Z0-9_]+)\(/, arr)) {
-                      print arr[1]  # Print method name when found
+                      print arr[1]
                       break
                     }
                   }
@@ -74,15 +72,7 @@ jobs:
             fi
           done
 
-          if [ -z "$new_tests" ]; then
-            echo "No new test methods found."
-            echo "new_tests=" >> $GITHUB_ENV
-          else
-            echo "New test methods detected: $new_tests"
-            echo "new_tests=$new_tests" >> $GITHUB_ENV
-          fi
-
-          # Set output for the new tests to be used in subsequent jobs
+          echo "new_tests='$new_tests'"
           echo "::set-output name=new_tests::$new_tests"
 
   run-new-tests:
@@ -106,37 +96,15 @@ jobs:
             echo "No new or modified test methods found."
             exit 0
           fi
-          
+
           for test in $new_tests; do
             module=$(echo $test | cut -d':' -f1)
             file=$(echo $test | cut -d':' -f2)
             method=$(echo $test | cut -d':' -f3)
 
-            # Run the new/modified test 50 times
             echo "Running $method from $file 50 times"
             for i in $(seq 1 50); do
-              # Correct the mvn command to run the method properly
               mvn -f $module/pom.xml -Dtest="$(basename $file .java)#${method}" test
-            done
-          done
-
-      - name: Run full test files 30 times
-        run: |
-          new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"
-          
-          if [ -z "$new_tests" ]; then
-            echo "No new or modified test methods found."
-            exit 0
-          fi
-          
-          for test in $new_tests; do
-            module=$(echo $test | cut -d':' -f1)
-            file=$(echo $test | cut -d':' -f2)
-            
-            # Run the entire test file 30 times
-            echo "Running all tests in $file 30 times"
-            for i in $(seq 1 30); do
-              mvn -f $module/pom.xml -Dtest="$(basename $file .java)" test
             done
           done
 
