@@ -87,9 +87,9 @@ jobs:
             echo "No new or modified test methods found."
             exit 0
           fi
-          
+  
           mkdir -p test-results  # Directory to store logs
-          
+  
           for test in $new_tests; do
             module=$(echo $test | cut -d':' -f1)
             file=$(echo $test | cut -d':' -f2)
@@ -99,16 +99,17 @@ jobs:
             for i in $(seq 1 50); do
               echo "Running test method $method from $file, iteration $i"
               mvn -f $module/pom.xml -Dtest="$(basename $file .java)#${method}" test \
-              | tee -a test-results/${method}_run_${i}.log  # Save each method run log
+              | tee -a test-results/${method}_run_${i}.log  # Save each method run log uniquely per iteration
             done
   
             # Run the entire test class 30 times
             for i in $(seq 1 30); do
               echo "Running entire class $(basename $file .java), iteration $i"
               mvn -f $module/pom.xml -Dtest="$(basename $file .java)" test \
-              | tee -a test-results/$(basename $file .java)_class_run_${i}.log  # Save each class run log
+              | tee -a test-results/$(basename $file .java)_class_run_${i}.log  # Save each class run log uniquely per iteration
             done
           done
+
   
   generate-report:
     needs: 
