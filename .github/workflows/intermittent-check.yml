@@ -98,13 +98,13 @@ jobs:
 
   generate-report:
     needs: 
+        - run-new-tests
         - detect-new-tests
-      # - run-new-tests
     runs-on: ubuntu-latest
     steps:
       - name: Generate report of new/modified tests
         run: |
-          new_tests="${{ env.new_tests }}"
+          new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"
           
           if [ -z "$new_tests" ]; then
             echo "No new or modified test methods found."
