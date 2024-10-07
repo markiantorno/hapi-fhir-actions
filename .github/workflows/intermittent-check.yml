@@ -88,7 +88,9 @@ jobs:
             exit 0
           fi
   
-          mkdir -p test-results  # Directory to store logs
+          # Ensure test-results directory is created
+          mkdir -p test-results || exit 1
+          echo "Test results directory created."
   
           for test in $new_tests; do
             module=$(echo $test | cut -d':' -f1)
@@ -99,17 +101,30 @@ jobs:
             for i in $(seq 1 50); do
               echo "Running test method $method from $file, iteration $i"
               mvn -f $module/pom.xml -Dtest="$(basename $file .java)#${method}" test \
-              | tee -a test-results/${method}_run_${i}.log  # Save each method run log uniquely per iteration
+              | tee test-results/${method}_run_${i}.log  # Save each method run log uniquely per iteration
+              
+              # Check if log was created
+              if [ ! -f "test-results/${method}_run_${i}.log" ]; then
+                echo "Failed to create log for method run $i"
+              else
+                echo "Log for method run $i created successfully"
+              fi
             done
   
             # Run the entire test class 30 times
             for i in $(seq 1 30); do
               echo "Running entire class $(basename $file .java), iteration $i"
               mvn -f $module/pom.xml -Dtest="$(basename $file .java)" test \
-              | tee -a test-results/$(basename $file .java)_class_run_${i}.log  # Save each class run log uniquely per iteration
+              | tee test-results/$(basename $file .java)_class_run_${i}.log  # Save each class run log uniquely per iteration
+              
+              # Check if log was created
+              if [ ! -f "test-results/$(basename $file .java)_class_run_${i}.log" ]; then
+                echo "Failed to create log for class run $i"
+              else
+                echo "Log for class run $i created successfully"
+              fi
             done
           done
-
   
   generate-report:
     needs: 
@@ -147,12 +162,14 @@ jobs:
               total_method_runs=0
               failed_method_runs=0
               for log in test-results/${method}_run_*.log; do
-                total_method_runs=$((total_method_runs + 1))
-                if grep -q "\[ERROR\]" "$log"; then
-                  echo "    Method Run $(basename $log .log): FAILED"
-                  failed_method_runs=$((failed_method_runs + 1))
-                else
-                  echo "    Method Run $(basename $log .log): PASSED"
+                if [ -f "$log" ]; then
+                  total_method_runs=$((total_method_runs + 1))
+                  if grep -q "\[ERROR\]" "$log"; then
+                    echo "    Method Run $(basename $log .log): FAILED"
+                    failed_method_runs=$((failed_method_runs + 1))
+                  else
+                    echo "    Method Run $(basename $log .log): PASSED"
+                  fi
                 fi
               done
   
@@ -165,12 +182,14 @@ jobs:
               total_class_runs=0
               failed_class_runs=0
               for log in test-results/$(basename $file .java)_class_run_*.log; do
-                total_class_runs=$((total_class_runs + 1))
-                if grep -q "\[ERROR\]" "$log"; then
-                  echo "    Class Run $(basename $log .log): FAILED"
-                  failed_class_runs=$((failed_class_runs + 1))
-                else
-                  echo "    Class Run $(basename $log .log): PASSED"
+                if [ -f "$log" ]; then
+                  total_class_runs=$((total_class_runs + 1))
+                  if grep -q "\[ERROR\]" "$log"; then
+                    echo "    Class Run $(basename $log .log): FAILED"
+                    failed_class_runs=$((failed_class_runs + 1))
+                  else
+                    echo "    Class Run $(basename $log .log): PASSED"
+                  fi
                 fi
               done
   
