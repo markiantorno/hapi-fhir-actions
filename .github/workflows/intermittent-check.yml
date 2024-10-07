@@ -73,36 +73,50 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+  
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-
-      - name: Run new tests 50 times
+  
+      - name: Run new tests 50 times and the entire class 30 times
         run: |
           new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"
           if [ -z "$new_tests" ]; then
             echo "No new or modified test methods found."
             exit 0
           fi
+          
+          mkdir -p test-results  # Directory to store logs
+          
           for test in $new_tests; do
             module=$(echo $test | cut -d':' -f1)
             file=$(echo $test | cut -d':' -f2)
             method=$(echo $test | cut -d':' -f3)
+  
+            # Run individual test methods 50 times
             for i in $(seq 1 50); do
-              mvn -f $module/pom.xml -Dtest="$(basename $file .java)#${method}" test
+              echo "Running test method $method from $file, iteration $i"
+              mvn -f $module/pom.xml -Dtest="$(basename $file .java)#${method}" test \
+              | tee -a test-results/${method}_run_${i}.log  # Save each method run log
+            done
+  
+            # Run the entire test class 30 times
+            for i in $(seq 1 30); do
+              echo "Running entire class $(basename $file .java), iteration $i"
+              mvn -f $module/pom.xml -Dtest="$(basename $file .java)" test \
+              | tee -a test-results/$(basename $file .java)_class_run_${i}.log  # Save each class run log
             done
           done
-
+  
   generate-report:
     needs: 
-        - run-new-tests
-        - detect-new-tests
+      - run-new-tests
+      - detect-new-tests
     runs-on: ubuntu-latest
     steps:
-      - name: Generate report of new/modified tests
+      - name: Generate report of new/modified tests with results
         run: |
           new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"
           
@@ -125,6 +139,55 @@ jobs:
               echo "• Module: $module"
               echo "  File: $file"
               echo "  Test Method: $method"
+              echo ""
+  
+              # Report for individual test method (50 runs)
+              echo "    Test Method Results:"
+              total_method_runs=0
+              failed_method_runs=0
+              for log in test-results/${method}_run_*.log; do
+                total_method_runs=$((total_method_runs + 1))
+                if grep -q "\[ERROR\]" "$log"; then
+                  echo "    Method Run $(basename $log .log): FAILED"
+                  failed_method_runs=$((failed_method_runs + 1))
+                else
+                  echo "    Method Run $(basename $log .log): PASSED"
+                fi
+              done
+  
+              echo "    Total method runs: $total_method_runs"
+              echo "    Method Failures: $failed_method_runs"
+              echo ""
+  
+              # Report for the entire class (30 runs)
+              echo "    Entire Class Results:"
+              total_class_runs=0
+              failed_class_runs=0
+              for log in test-results/$(basename $file .java)_class_run_*.log; do
+                total_class_runs=$((total_class_runs + 1))
+                if grep -q "\[ERROR\]" "$log"; then
+                  echo "    Class Run $(basename $log .log): FAILED"
+                  failed_class_runs=$((failed_class_runs + 1))
+                else
+                  echo "    Class Run $(basename $log .log): PASSED"
+                fi
+              done
+  
+              echo "    Total class runs: $total_class_runs"
+              echo "    Class Failures: $failed_class_runs"
+              echo ""
+  
+              # Parse test summary from the first run logs
+              if [ -f "test-results/${method}_run_1.log" ]; then
+                summary=$(grep -E 'Tests run:.*' test-results/${method}_run_1.log)
+                echo "    Test Method Summary: $summary"
+              fi
+  
+              if [ -f "test-results/$(basename $file .java)_class_run_1.log" ]; then
+                summary=$(grep -E 'Tests run:.*' test-results/$(basename $file .java)_class_run_1.log)
+                echo "    Class Test Summary: $summary"
+              fi
+  
               echo ""
             done
   
