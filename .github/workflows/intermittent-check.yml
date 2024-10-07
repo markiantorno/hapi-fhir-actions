@@ -97,23 +97,35 @@ jobs:
           done
 
   generate-report:
-    needs: detect-new-tests
+    needs: run-new-tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
       - name: Generate report of new/modified tests
         run: |
-          new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"
+          new_tests="${{ env.new_tests }}"
+          
           if [ -z "$new_tests" ]; then
             echo "No new or modified test methods found."
           else
-            echo "New/Modified test methods detected: $new_tests"
+            echo "======================================"
+            echo "        New/Modified Test Report       "
+            echo "======================================"
+            echo ""
+            echo "The following new/modified test methods were detected:"
+            echo ""
+  
+            IFS=' ' read -r -a test_array <<< "$new_tests"
+            for test in "${test_array[@]}"; do
+              module=$(echo "$test" | cut -d':' -f1)
+              file=$(echo "$test" | cut -d':' -f2)
+              method=$(echo "$test" | cut -d':' -f3)
+              
+              echo "• Module: $module"
+              echo "  File: $file"
+              echo "  Test Method: $method"
+              echo ""
+            done
+  
+            echo "======================================"
+            echo "End of report."
           fi
