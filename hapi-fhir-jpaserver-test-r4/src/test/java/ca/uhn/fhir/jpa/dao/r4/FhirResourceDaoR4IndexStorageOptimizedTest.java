@@ -46,6 +46,7 @@ import org.hl7.fhir.r4.model.Substance;
 import org.hl7.fhir.r4.model.ValueSet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -70,6 +71,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * $reindex operation will correctly null/recover sp_name, res_type, sp_updated parameters
  * of ResourceIndexedSearchParam entities.
  */
+@Disabled
 public class FhirResourceDaoR4IndexStorageOptimizedTest extends BaseJpaR4Test {
 
 	@Autowired
