@@ -13,7 +13,7 @@ jobs:
   detect-new-tests:
     runs-on: ubuntu-latest
     outputs:
-      new_tests: ${{ steps.detect-tests.outputs.new_tests }}  # Explicitly passing output
+      new_tests: ${{ steps.detect-tests.outputs.new_tests }}  # Explicitly setting output
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,27 +28,21 @@ jobs:
         id: find-tests
         run: |
           git fetch origin master
-
           new_test_files=$(git diff --name-only origin/master | grep 'src/test/java/.*\(Test\|IT\).java' || true)
-
           if [ -z "$new_test_files" ]; then
             echo "No new or modified test files found."
             exit 0
           fi
-
           echo "new_test_files=$new_test_files" >> $GITHUB_ENV
 
       - name: Detect new JUnit 5 test methods
         id: detect-tests
         run: |
           JUNIT_ANNOTATIONS='@Test|@ParameterizedTest|@RepeatedTest|@TestFactory|@TestTemplate|@TestMethodOrder'
-
           new_tests=""
           for file in $new_test_files; do
             echo "Processing $file"
-
             module_dir=$(echo "$file" | sed -E 's|/src/test/java/.*||')
-
             test_methods=$(awk -v annotations="$JUNIT_ANNOTATIONS" '
               BEGIN { RS=""; FS="\n" }
               {
@@ -63,20 +57,15 @@ jobs:
                 }
               }
             ' "$file")
-
             if [ -n "$test_methods" ]; then
-              echo "Detected test methods in $file: $test_methods"
               for method in $test_methods; do
                 new_tests="$new_tests $module_dir:$file:$method"
               done
             fi
           done
-
-          # Trim any leading/trailing spaces
-          new_tests=$(echo $new_tests | xargs)
-
+          new_tests=$(echo $new_tests | xargs)  # Trim whitespace
           echo "new_tests='$new_tests'"
-          echo "::set-output name=new_tests::$new_tests"
+          echo "new_tests=$new_tests" >> $GITHUB_OUTPUT  # Use new way to set output
 
   run-new-tests:
     needs: detect-new-tests
@@ -94,25 +83,21 @@ jobs:
       - name: Run new tests 50 times
         run: |
           new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"
-          
           if [ -z "$new_tests" ]; then
             echo "No new or modified test methods found."
             exit 0
           fi
-
           for test in $new_tests; do
             module=$(echo $test | cut -d':' -f1)
             file=$(echo $test | cut -d':' -f2)
             method=$(echo $test | cut -d':' -f3)
-
-            echo "Running $method from $file 50 times"
             for i in $(seq 1 50); do
               mvn -f $module/pom.xml -Dtest="$(basename $file .java)#${method}" test
             done
           done
 
   generate-report:
-    needs: run-new-tests
+    needs: detect-new-tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -127,7 +112,6 @@ jobs:
       - name: Generate report of new/modified tests
         run: |
           new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"
-          
           if [ -z "$new_tests" ]; then
             echo "No new or modified test methods found."
           else
