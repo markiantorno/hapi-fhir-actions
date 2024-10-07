@@ -72,6 +72,9 @@ jobs:
             fi
           done
 
+          # Trim any leading/trailing spaces
+          new_tests=$(echo $new_tests | xargs)
+
           echo "new_tests='$new_tests'"
           echo "::set-output name=new_tests::$new_tests"
 
