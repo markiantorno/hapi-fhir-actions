@@ -101,13 +101,13 @@ jobs:
             for i in $(seq 1 50); do
               echo "Running test method $method from $file, iteration $i"
               mvn -f $module/pom.xml -Dtest="$(basename $file .java)#${method}" test \
-              | tee test-results/${method}_run_${i}.log  # Save each method run log uniquely per iteration
+              | tee test-results/${method}_run_${i}.log
   
-              # Check if log was created
+              # Check if the log file was created
               if [ -f "test-results/${method}_run_${i}.log" ]; then
-                echo "Log for method run $i created successfully"
+                echo "Log for method run $i created: test-results/${method}_run_${i}.log"
               else
-                echo "Log for method run $i was not created"
+                echo "WARNING: Log for method run $i was NOT created!"
               fi
             done
   
@@ -115,17 +115,17 @@ jobs:
             for i in $(seq 1 30); do
               echo "Running entire class $(basename $file .java), iteration $i"
               mvn -f $module/pom.xml -Dtest="$(basename $file .java)" test \
-              | tee test-results/$(basename $file .java)_class_run_${i}.log  # Save each class run log uniquely per iteration
+              | tee test-results/$(basename $file .java)_class_run_${i}.log
   
-              # Check if log was created
+              # Check if the log file was created
               if [ -f "test-results/$(basename $file .java)_class_run_${i}.log" ]; then
-                echo "Log for class run $i created successfully"
+                echo "Log for class run $i created: test-results/$(basename $file .java)_class_run_${i}.log"
               else
-                echo "Log for class run $i was not created"
+                echo "WARNING: Log for class run $i was NOT created!"
               fi
             done
           done
-  
+    
   generate-report:
     needs: 
       - run-new-tests
@@ -161,6 +161,7 @@ jobs:
               echo "    Test Method Results:"
               total_method_runs=0
               failed_method_runs=0
+  
               for log in test-results/${method}_run_*.log; do
                 if [ -f "$log" ]; then
                   total_method_runs=$((total_method_runs + 1))
@@ -170,6 +171,8 @@ jobs:
                   else
                     echo "    Method Run $(basename $log .log): PASSED"
                   fi
+                else
+                  echo "WARNING: Log file $log not found!"
                 fi
               done
   
@@ -181,6 +184,7 @@ jobs:
               echo "    Entire Class Results:"
               total_class_runs=0
               failed_class_runs=0
+  
               for log in test-results/$(basename $file .java)_class_run_*.log; do
                 if [ -f "$log" ]; then
                   total_class_runs=$((total_class_runs + 1))
@@ -190,24 +194,13 @@ jobs:
                   else
                     echo "    Class Run $(basename $log .log): PASSED"
                   fi
+                else
+                  echo "WARNING: Log file $log not found!"
                 fi
               done
   
               echo "    Total class runs: $total_class_runs"
               echo "    Class Failures: $failed_class_runs"
-              echo ""
-  
-              # Parse test summary from the first run logs
-              if [ -f "test-results/${method}_run_1.log" ]; then
-                summary=$(grep -E 'Tests run:.*' test-results/${method}_run_1.log)
-                echo "    Test Method Summary: $summary"
-              fi
-  
-              if [ -f "test-results/$(basename $file .java)_class_run_1.log" ]; then
-                summary=$(grep -E 'Tests run:.*' test-results/$(basename $file .java)_class_run_1.log)
-                echo "    Class Test Summary: $summary"
-              fi
-  
               echo ""
             done
   
