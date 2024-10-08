@@ -1,28 +1,39 @@
-name: Detect and Report New Tests
+name: Detect and Run New Tests in Multi-Module Maven Project
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
+    branches:
+      - master
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 jobs:
   detect-new-tests:
     runs-on: ubuntu-latest
+    outputs:
+      new_tests: ${{ steps.detect-tests.outputs.new_tests }}  # Explicitly setting output
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up JDK
-        uses: actions/setup-java@v3
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Run Tests and Generate Logs
+      - name: Detect new or modified test files in all modules
+        id: find-tests
         run: |
-          # Assuming Maven is used to run tests and generate logs
-          mvn test
+          git fetch origin master
+          new_test_files=$(git diff --name-only origin/master | grep 'src/test/java/.*\(Test\|IT\).java' || true)
+          if [ -z "$new_test_files" ]; then
+            echo "No new or modified test files found."
+            exit 0
+          fi
+          echo "new_test_files=$new_test_files" >> $GITHUB_ENV
 
       - name: Detect new JUnit 5 test methods
         id: detect-tests
@@ -54,60 +65,143 @@ jobs:
           done
           new_tests=$(echo $new_tests | xargs)  # Trim whitespace
           echo "new_tests='$new_tests'"
-          echo "new_tests=$new_tests" >> $GITHUB_OUTPUT
-
-      - name: Debugging log files in test-results directory
-        run: |
-          echo "Debugging log files in test-results directory"
-          ls -l test-results
-
-      - name: Parse and Generate Report
-        run: |
-          log_dir="test-results"
-          test_method="testConvertTwo"
-          class_name="VersionConvertor_14_30Test"
+          echo "new_tests=$new_tests" >> $GITHUB_OUTPUT  # Use new way to set output
           
-          method_run_count=0
-          method_failures=0
-          class_run_count=0
-          class_failures=0
-
-          # Check for test method logs
-          test_method_logs=$(find "$log_dir" -name "${test_method}_run_*.log")
-          class_logs=$(find "$log_dir" -name "${class_name}_class_run_*.log")
-
-          # Count the number of method and class runs
-          for log_file in $test_method_logs; do
-            method_run_count=$((method_run_count + 1))
-            if grep -q "FAILED" "$log_file"; then
-              method_failures=$((method_failures + 1))
-            fi
-          done
-
-          for log_file in $class_logs; do
-            class_run_count=$((class_run_count + 1))
-            if grep -q "FAILED" "$log_file"; then
-              class_failures=$((class_failures + 1))
-            fi
-          done
-
-          echo "======================================"
-          echo "        New/Modified Test Report       "
-          echo "======================================"
-          echo ""
-          echo "Detected new test method: $test_method"
-          echo "Method run count: $method_run_count"
-          echo "Method failures: $method_failures"
-          echo ""
-          echo "Class test runs for $class_name: $class_run_count"
-          echo "Class test failures: $class_failures"
-          echo ""
-          echo "======================================"
-          echo "        End of Report                 "
-          echo "======================================"
-          
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v3
+  run-new-tests:
+    needs: detect-new-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+  
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
-          name: test-logs
-          path: test-results/
+          distribution: 'temurin'
+          java-version: '17'
+          
+      - name: Restore Maven cache
+        uses: actions/cache@v4
+        with:
+          path: $HOME/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-
+  
+      - name: Run new tests 50 times and the entire class 30 times
+        run: |
+          new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"
+          if [ -z "$new_tests" ]; then
+            echo "No new or modified test methods found."
+            exit 0
+          fi
+          
+          mkdir -p test-results  # Directory to store logs
+          
+          for test in $new_tests; do
+            module=$(echo $test | cut -d':' -f1)
+            file=$(echo $test | cut -d':' -f2)
+            method=$(echo $test | cut -d':' -f3)
+  
+            # Run individual test methods 50 times
+            for i in $(seq 1 50); do
+              echo "Running test method $method from $file, iteration $i"
+              mvn -f $module/pom.xml -Dtest="$(basename $file .java)#${method}" test \
+              -Dmaven.repo.local=$HOME/.m2/repository \
+              | tee -a test-results/${method}_run_${i}.log  # Save each method run log
+            done
+  
+            # Run the entire test class 30 times
+            for i in $(seq 1 30); do
+              echo "Running entire class $(basename $file .java), iteration $i"
+              mvn -f $module/pom.xml -Dtest="$(basename $file .java)" test \
+              -Dmaven.repo.local=$HOME/.m2/repository \
+              | tee -a test-results/$(basename $file .java)_class_run_${i}.log  # Save each class run log
+            done
+          done
+          
+  generate-report:
+    needs: 
+      - run-new-tests
+      - detect-new-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate report of new/modified tests with results
+        run: |
+          new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"
+          
+          if [ -z "$new_tests" ]; then
+            echo "No new or modified test methods found."
+          else
+            echo "======================================"
+            echo "        New/Modified Test Report       "
+            echo "======================================"
+            echo ""
+            echo "The following new/modified test methods were detected:"
+            echo ""
+  
+            IFS=' ' read -r -a test_array <<< "$new_tests"
+            for test in "${test_array[@]}"; do
+              module=$(echo "$test" | cut -d':' -f1)
+              file=$(echo "$test" | cut -d':' -f2)
+              method=$(echo "$test" | cut -d':' -f3)
+              
+              echo "• Module: $module"
+              echo "  File: $file"
+              echo "  Test Method: $method"
+              echo ""
+  
+              # Report for individual test method (50 runs)
+              echo "    Test Method Results:"
+              total_method_runs=0
+              failed_method_runs=0
+              for log in test-results/${method}_run_*.log; do
+                total_method_runs=$((total_method_runs + 1))
+                if grep -q "\[ERROR\]" "$log"; then
+                  echo "    Method Run $(basename $log .log): FAILED"
+                  failed_method_runs=$((failed_method_runs + 1))
+                else
+                  echo "    Method Run $(basename $log .log): PASSED"
+                fi
+              done
+  
+              echo "    Total method runs: $total_method_runs"
+              echo "    Method Failures: $failed_method_runs"
+              echo ""
+  
+              # Report for the entire class (30 runs)
+              echo "    Entire Class Results:"
+              total_class_runs=0
+              failed_class_runs=0
+              for log in test-results/$(basename $file .java)_class_run_*.log; do
+                total_class_runs=$((total_class_runs + 1))
+                if grep -q "\[ERROR\]" "$log"; then
+                  echo "    Class Run $(basename $log .log): FAILED"
+                  failed_class_runs=$((failed_class_runs + 1))
+                else
+                  echo "    Class Run $(basename $log .log): PASSED"
+                fi
+              done
+  
+              echo "    Total class runs: $total_class_runs"
+              echo "    Class Failures: $failed_class_runs"
+              echo ""
+  
+              # Parse test summary from the first run logs
+              if [ -f "test-results/${method}_run_1.log" ]; then
+                summary=$(grep -E 'Tests run:.*' test-results/${method}_run_1.log)
+                echo "    Test Method Summary: $summary"
+              fi
+  
+              if [ -f "test-results/$(basename $file .java)_class_run_1.log" ]; then
+                summary=$(grep -E 'Tests run:.*' test-results/$(basename $file .java)_class_run_1.log)
+                echo "    Class Test Summary: $summary"
+              fi
+  
+              echo ""
+            done
+  
+            echo "======================================"
+            echo "End of report."
+          fi
+
