@@ -13,7 +13,7 @@ jobs:
   detect-new-tests:
     runs-on: ubuntu-latest
     outputs:
-      new_tests: ${{ steps.detect-tests.outputs.new_tests }}  # Explicitly setting output
+      new_tests: ${{ steps.detect-tests.outputs.new_tests }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -65,7 +65,7 @@ jobs:
           done
           new_tests=$(echo $new_tests | xargs)  # Trim whitespace
           echo "new_tests='$new_tests'"
-          echo "new_tests=$new_tests" >> $GITHUB_OUTPUT  # Use new way to set output
+          echo "new_tests=$new_tests" >> $GITHUB_OUTPUT
 
   run-new-tests:
     needs: detect-new-tests
@@ -73,66 +73,64 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-  
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-  
-      - name: Run new tests 50 times and the entire class 30 times
+
+      - name: Debug log directories and permissions
+        run: |
+          echo "Current Directory: $(pwd)"
+          ls -l
+          mkdir -p test-results
+          echo "After creating test-results directory:"
+          ls -l
+          chmod -R 777 test-results  # Ensure permissions are wide open for the test-results directory
+
+      - name: Run new tests 50 times and the whole test class 30 times
         run: |
           new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"
           if [ -z "$new_tests" ]; then
             echo "No new or modified test methods found."
             exit 0
           fi
-  
-          # Ensure test-results directory is created
-          mkdir -p test-results || exit 1
-          echo "Test results directory created."
-  
+
+          mkdir -p test-results
+
           for test in $new_tests; do
             module=$(echo $test | cut -d':' -f1)
             file=$(echo $test | cut -d':' -f2)
             method=$(echo $test | cut -d':' -f3)
-  
-            # Run individual test methods 50 times
+
+            echo "Running test method $method from $file in module $module"
+            
+            # Run the individual test method 50 times
             for i in $(seq 1 50); do
-              echo "Running test method $method from $file, iteration $i"
-              mvn -f $module/pom.xml -Dtest="$(basename $file .java)#${method}" test \
-              | tee test-results/${method}_run_${i}.log
-  
-              # Check if the log file was created
-              if [ -f "test-results/${method}_run_${i}.log" ]; then
-                echo "Log for method run $i created: test-results/${method}_run_${i}.log"
-              else
-                echo "WARNING: Log for method run $i was NOT created!"
-              fi
+              mvn -f $module/pom.xml -Dtest="$(basename $file .java)#${method}" test | tee test-results/${method}_run_$i.log
+              echo "Log for method run $i created: test-results/${method}_run_$i.log"
             done
-  
-            # Run the entire test class 30 times
+
+            # Run the entire class 30 times
             for i in $(seq 1 30); do
-              echo "Running entire class $(basename $file .java), iteration $i"
-              mvn -f $module/pom.xml -Dtest="$(basename $file .java)" test \
-              | tee test-results/$(basename $file .java)_class_run_${i}.log
-  
-              # Check if the log file was created
-              if [ -f "test-results/$(basename $file .java)_class_run_${i}.log" ]; then
-                echo "Log for class run $i created: test-results/$(basename $file .java)_class_run_${i}.log"
-              else
-                echo "WARNING: Log for class run $i was NOT created!"
-              fi
+              mvn -f $module/pom.xml -Dtest="$(basename $file .java)" test | tee test-results/$(basename $file .java)_class_run_$i.log
+              echo "Log for class run $i created: test-results/$(basename $file .java)_class_run_$i.log"
             done
           done
-    
+
+      - name: Debug log files
+        run: |
+          echo "Debugging log files in test-results directory"
+          ls -l test-results
+
   generate-report:
     needs: 
-      - run-new-tests
-      - detect-new-tests
+        - run-new-tests
+        - detect-new-tests
     runs-on: ubuntu-latest
     steps:
-      - name: Generate report of new/modified tests with results
+      - name: Generate report of new/modified tests
         run: |
           new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"
           
@@ -155,56 +153,34 @@ jobs:
               echo "• Module: $module"
               echo "  File: $file"
               echo "  Test Method: $method"
+              
+              # Generate method run results
               echo ""
-  
-              # Report for individual test method (50 runs)
-              echo "    Test Method Results:"
-              total_method_runs=0
-              failed_method_runs=0
-  
-              for log in test-results/${method}_run_*.log; do
-                if [ -f "$log" ]; then
-                  total_method_runs=$((total_method_runs + 1))
-                  if grep -q "\[ERROR\]" "$log"; then
-                    echo "    Method Run $(basename $log .log): FAILED"
-                    failed_method_runs=$((failed_method_runs + 1))
-                  else
-                    echo "    Method Run $(basename $log .log): PASSED"
-                  fi
-                fi
-              done
-  
-              if [ $total_method_runs -eq 0 ]; then
-                echo "WARNING: No method run logs found for $method!"
+              if ls test-results/${method}_run_*.log 1> /dev/null 2>&1; then
+                echo "    Test Method Results:"
+                total_method_runs=$(ls test-results/${method}_run_*.log | wc -l)
+                method_failures=$(grep -L "BUILD SUCCESS" test-results/${method}_run_*.log | wc -l)
+                echo "    Total method runs: $total_method_runs"
+                echo "    Method Failures: $method_failures"
+              else
+                echo "    WARNING: No method run logs found for $method!"
+                echo "    Total method runs: 0"
+                echo "    Method Failures: 0"
               fi
-  
-              echo "    Total method runs: $total_method_runs"
-              echo "    Method Failures: $failed_method_runs"
+
+              # Generate class run results
               echo ""
-  
-              # Report for the entire class (30 runs)
-              echo "    Entire Class Results:"
-              total_class_runs=0
-              failed_class_runs=0
-  
-              for log in test-results/$(basename $file .java)_class_run_*.log; do
-                if [ -f "$log" ]; then
-                  total_class_runs=$((total_class_runs + 1))
-                  if grep -q "\[ERROR\]" "$log"; then
-                    echo "    Class Run $(basename $log .log): FAILED"
-                    failed_class_runs=$((failed_class_runs + 1))
-                  else
-                    echo "    Class Run $(basename $log .log): PASSED"
-                  fi
-                fi
-              done
-  
-              if [ $total_class_runs -eq 0 ]; then
-                echo "WARNING: No class run logs found for $(basename $file .java)!"
+              if ls test-results/$(basename $file .java)_class_run_*.log 1> /dev/null 2>&1; then
+                echo "    Entire Class Results:"
+                total_class_runs=$(ls test-results/$(basename $file .java)_class_run_*.log | wc -l)
+                class_failures=$(grep -L "BUILD SUCCESS" test-results/$(basename $file .java)_class_run_*.log | wc -l)
+                echo "    Total class runs: $total_class_runs"
+                echo "    Class Failures: $class_failures"
+              else
+                echo "    WARNING: No class run logs found for $(basename $file .java)!"
+                echo "    Total class runs: 0"
+                echo "    Class Failures: 0"
               fi
-  
-              echo "    Total class runs: $total_class_runs"
-              echo "    Class Failures: $failed_class_runs"
               echo ""
             done
   
