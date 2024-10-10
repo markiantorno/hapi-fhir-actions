@@ -34,20 +34,30 @@ jobs:
             exit 0
           fi
           echo "new_test_files=$new_test_files" >> $GITHUB_ENV
-
+      
       - name: Detect new JUnit 5 test methods
         id: detect-tests
         run: |
           JUNIT_ANNOTATIONS='@Test|@ParameterizedTest|@RepeatedTest|@TestFactory|@TestTemplate|@TestMethodOrder'
           new_tests=""
+          
+          # Debugging - print new test files
+          echo "New test files: $new_test_files"
+          
           for file in $new_test_files; do
             echo "Processing $file"
             module_dir=$(echo "$file" | sed -E 's|/src/test/java/.*||')
+            
+            # Debugging - print the contents of the file
+            echo "Content of $file:"
+            cat "$file"
+            
+            # Use awk to find JUnit test methods
             test_methods=$(awk -v annotations="$JUNIT_ANNOTATIONS" '
               BEGIN { RS=""; FS="\n" }
               {
                 while (match($0, annotations)) {
-                  getline
+                  getline  # Read the next line after the annotation
                   if (match($0, /public.* ([a-zA-Z0-9_]+)\(/, arr)) {
                     print arr[1]
                   }
@@ -55,15 +65,18 @@ jobs:
               }
             ' "$file")
             
+            echo "Detected test methods: $test_methods"
+            
             if [ -n "$test_methods" ]; then
               for method in $test_methods; do
                 new_tests="$new_tests $module_dir:$file:$method"
               done
             fi
           done
+      
           new_tests=$(echo $new_tests | xargs)  # Trim whitespace
           echo "new_tests='$new_tests'"
-          echo "new_tests=$new_tests" >> $GITHUB_OUTPUT  # Use new way to set output
+          echo "new_tests=$new_tests" >> $GITHUB_OUTPUT
                     
   run-new-tests:
     needs: detect-new-tests
@@ -86,6 +99,7 @@ jobs:
       - name: Run new tests and entire classes
         run: |
           new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"
+          
           if [ -z "$new_tests" ]; then
             echo "No new or modified test methods found."
             exit 0
