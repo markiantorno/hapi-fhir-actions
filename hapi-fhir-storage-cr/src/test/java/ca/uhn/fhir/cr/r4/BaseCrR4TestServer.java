@@ -4,9 +4,12 @@ import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.cr.IResourceLoader;
 import ca.uhn.fhir.cr.TestHapiFhirCrPartitionConfig;
 import ca.uhn.fhir.cr.config.r4.ApplyOperationConfig;
+import ca.uhn.fhir.cr.config.r4.DataRequirementsOperationConfig;
+import ca.uhn.fhir.cr.config.r4.EvaluateOperationConfig;
 import ca.uhn.fhir.cr.config.r4.ExtractOperationConfig;
 import ca.uhn.fhir.cr.config.r4.PackageOperationConfig;
 import ca.uhn.fhir.cr.config.r4.PopulateOperationConfig;
+import ca.uhn.fhir.cr.config.test.TestCrStorageSettingsConfigurer;
 import ca.uhn.fhir.cr.config.test.r4.TestCrR4Config;
 import ca.uhn.fhir.jpa.api.config.JpaStorageSettings;
 import ca.uhn.fhir.jpa.api.dao.DaoRegistry;
@@ -43,6 +46,8 @@ import java.util.concurrent.TimeUnit;
 	TestHapiFhirCrPartitionConfig.class,
 	TestCrR4Config.class,
 	ApplyOperationConfig.class,
+	DataRequirementsOperationConfig.class,
+	EvaluateOperationConfig.class,
 	ExtractOperationConfig.class,
 	PackageOperationConfig.class,
 	PopulateOperationConfig.class
@@ -75,8 +80,12 @@ public abstract class BaseCrR4TestServer extends BaseJpaR4Test implements IResou
 	}
 	@Autowired
 	RestfulServer ourRestfulServer;
+	@Autowired
+	TestCrStorageSettingsConfigurer myTestCrStorageSettingsConfigurer;
+
 	@BeforeEach
 	public void beforeStartServer() throws Exception {
+		myTestCrStorageSettingsConfigurer.setUpConfiguration();
 
 		ourServer = new Server(0);
 

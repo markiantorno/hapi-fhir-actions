@@ -2,7 +2,7 @@
  * #%L
  * HAPI FHIR - Core Library
  * %%
- * Copyright (C) 2014 - 2024 Smile CDR, Inc.
+ * Copyright (C) 2014 - 2025 Smile CDR, Inc.
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -162,9 +162,17 @@ public enum VersionEnum {
 
 	V7_3_0,
 	V7_4_0,
+	V7_4_1,
+	V7_4_2,
+	V7_4_3,
+	V7_4_4,
+	V7_4_5,
 
 	V7_5_0,
-	V7_6_0;
+	V7_6_0,
+	V7_6_1,
+	V7_7_0,
+	V7_8_0;
 
 	public static VersionEnum latestVersion() {
 		VersionEnum[] values = VersionEnum.values();

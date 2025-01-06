@@ -2,7 +2,7 @@
  * #%L
  * HAPI FHIR - Core Library
  * %%
- * Copyright (C) 2014 - 2024 Smile CDR, Inc.
+ * Copyright (C) 2014 - 2025 Smile CDR, Inc.
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
 import ca.uhn.fhir.validation.ValidationResult;
 import jakarta.annotation.Nonnull;
+import org.apache.commons.lang3.Validate;
 import org.hl7.fhir.instance.model.api.IBaseConformance;
 
 import java.io.Writer;
@@ -2176,6 +2177,32 @@ public enum Pointcut implements IPointcut {
 
 	/**
 	 * <b>Storage Hook:</b>
+	 * Invoked when a partition has been deleted, typically meaning the <code>$partition-management-delete-partition</code>
+	 * operation has been invoked.
+	 * <p>
+	 * This hook will only be called if
+	 * partitioning is enabled in the JPA server.
+	 * </p>
+	 * <p>
+	 * Hooks may accept the following parameters:
+	 * </p>
+	 * <ul>
+	 * <li>
+	 * ca.uhn.fhir.interceptor.model.RequestPartitionId - The ID of the partition that was deleted.
+	 * </li>
+	 * </ul>
+	 * <p>
+	 * Hooks must return void.
+	 * </p>
+	 */
+	STORAGE_PARTITION_DELETED(
+			// Return type
+			void.class,
+			// Params
+			"ca.uhn.fhir.interceptor.model.RequestPartitionId"),
+
+	/**
+	 * <b>Storage Hook:</b>
 	 * Invoked before any partition aware FHIR operation, when the selected partition has been identified (ie. after the
 	 * {@link #STORAGE_PARTITION_IDENTIFY_CREATE} or {@link #STORAGE_PARTITION_IDENTIFY_READ} hook was called. This allows
 	 * a separate hook to register, and potentially make decisions about whether the request should be allowed to proceed.
@@ -3081,6 +3108,10 @@ public enum Pointcut implements IPointcut {
 			@Nonnull Class<?> theReturnType,
 			@Nonnull ExceptionHandlingSpec theExceptionHandlingSpec,
 			String... theParameterTypes) {
+
+		// This enum uses the lowercase-b boolean type to indicate boolean return pointcuts
+		Validate.isTrue(!theReturnType.equals(Boolean.class), "Return type Boolean not allowed here, must be boolean");
+
 		myReturnType = theReturnType;
 		myExceptionHandlingSpec = theExceptionHandlingSpec;
 		myParameterTypes = Collections.unmodifiableList(Arrays.asList(theParameterTypes));
@@ -3104,6 +3135,11 @@ public enum Pointcut implements IPointcut {
 	@Nonnull
 	public Class<?> getReturnType() {
 		return myReturnType;
+	}
+
+	@Override
+	public Class<?> getBooleanReturnTypeForEnum() {
+		return boolean.class;
 	}
 
 	@Override

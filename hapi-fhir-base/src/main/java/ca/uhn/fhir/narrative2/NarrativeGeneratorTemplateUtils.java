@@ -2,7 +2,7 @@
  * #%L
  * HAPI FHIR - Core Library
  * %%
- * Copyright (C) 2014 - 2024 Smile CDR, Inc.
+ * Copyright (C) 2014 - 2025 Smile CDR, Inc.
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 package ca.uhn.fhir.narrative2;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.context.FhirVersionEnum;
 import ca.uhn.fhir.util.BundleUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hl7.fhir.instance.model.api.IBaseBundle;
@@ -42,7 +43,8 @@ public class NarrativeGeneratorTemplateUtils {
 	 * Given a Bundle as input, are any entries present with a given resource type
 	 */
 	public boolean bundleHasEntriesWithResourceType(IBaseBundle theBaseBundle, String theResourceType) {
-		FhirContext ctx = theBaseBundle.getStructureFhirVersionEnum().newContextCached();
+		FhirVersionEnum fhirVersionEnum = theBaseBundle.getStructureFhirVersionEnum();
+		FhirContext ctx = FhirContext.forCached(fhirVersionEnum);
 		List<Pair<String, IBaseResource>> entryResources =
 				BundleUtil.getBundleEntryUrlsAndResources(ctx, theBaseBundle);
 		return entryResources.stream()

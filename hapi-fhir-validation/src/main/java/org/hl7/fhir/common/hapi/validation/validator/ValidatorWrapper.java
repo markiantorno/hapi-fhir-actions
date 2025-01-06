@@ -3,6 +3,7 @@ package org.hl7.fhir.common.hapi.validation.validator;
 import ca.uhn.fhir.context.ConfigurationException;
 import ca.uhn.fhir.i18n.Msg;
 import ca.uhn.fhir.rest.api.EncodingEnum;
+import ca.uhn.fhir.util.Logs;
 import ca.uhn.fhir.util.XmlUtil;
 import ca.uhn.fhir.validation.IValidationContext;
 import com.google.gson.Gson;
@@ -25,7 +26,6 @@ import org.hl7.fhir.utilities.i18n.I18nConstants;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.hl7.fhir.validation.instance.InstanceValidator;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 
 class ValidatorWrapper {
 
-	private static final Logger ourLog = LoggerFactory.getLogger(ValidatorWrapper.class);
+	private static final Logger ourLog = Logs.getTerminologyTroubleshootingLog();
 	private BestPracticeWarningLevel myBestPracticeWarningLevel;
 	private boolean myAnyExtensionsAllowed;
 	private boolean myErrorForUnknownProfiles;
@@ -47,6 +47,7 @@ class ValidatorWrapper {
 	private boolean myAssumeValidRestReferences;
 	private boolean myNoExtensibleWarnings;
 	private boolean myNoBindingMsgSuppressed;
+
 	private Collection<? extends String> myExtensionDomains;
 	private IValidatorResourceFetcher myValidatorResourceFetcher;
 	private IValidationPolicyAdvisor myValidationPolicyAdvisor;
@@ -129,6 +130,8 @@ class ValidatorWrapper {
 		v.setResourceIdRule(IdStatus.OPTIONAL);
 		v.setNoTerminologyChecks(myNoTerminologyChecks);
 		v.setErrorForUnknownProfiles(myErrorForUnknownProfiles);
+		/* setUnknownCodeSystemsCauseErrors interacts with UnknownCodeSystemWarningValidationSupport. Until this interaction is resolved, the value here should remain fixed. */
+		v.setUnknownCodeSystemsCauseErrors(true);
 		v.getExtensionDomains().addAll(myExtensionDomains);
 		v.setFetcher(myValidatorResourceFetcher);
 		v.setPolicyAdvisor(myValidationPolicyAdvisor);

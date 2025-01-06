@@ -2,7 +2,7 @@
  * #%L
  * HAPI FHIR JPA Server
  * %%
- * Copyright (C) 2014 - 2024 Smile CDR, Inc.
+ * Copyright (C) 2014 - 2025 Smile CDR, Inc.
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ package ca.uhn.fhir.jpa.batch2;
 
 import ca.uhn.fhir.batch2.api.IJobPersistence;
 import ca.uhn.fhir.batch2.api.JobOperationResultJson;
+import ca.uhn.fhir.batch2.model.BatchInstanceStatusDTO;
+import ca.uhn.fhir.batch2.model.BatchWorkChunkStatusDTO;
 import ca.uhn.fhir.batch2.model.FetchJobInstancesRequest;
 import ca.uhn.fhir.batch2.model.JobInstance;
 import ca.uhn.fhir.batch2.model.StatusEnum;
@@ -256,6 +258,22 @@ public class JpaJobPersistenceImpl implements IJobPersistence {
 		return myTransactionService
 				.withSystemRequestOnDefaultPartition()
 				.execute(() -> myJobInstanceRepository.findById(theInstanceId).map(this::toInstance));
+	}
+
+	@Nonnull
+	@Override
+	public List<BatchWorkChunkStatusDTO> fetchWorkChunkStatusForInstance(String theInstanceId) {
+		return myTransactionService
+				.withSystemRequestOnDefaultPartition()
+				.execute(() -> myWorkChunkRepository.fetchWorkChunkStatusForInstance(theInstanceId));
+	}
+
+	@Nonnull
+	@Override
+	public BatchInstanceStatusDTO fetchBatchInstanceStatus(String theInstanceId) {
+		return myTransactionService
+				.withSystemRequestOnDefaultPartition()
+				.execute(() -> myJobInstanceRepository.fetchBatchInstanceStatus(theInstanceId));
 	}
 
 	@Override
@@ -524,8 +542,15 @@ public class JpaJobPersistenceImpl implements IJobPersistence {
 
 	@Override
 	public boolean updateInstance(String theInstanceId, JobInstanceUpdateCallback theModifier) {
-		Batch2JobInstanceEntity instanceEntity =
-				myEntityManager.find(Batch2JobInstanceEntity.class, theInstanceId, LockModeType.PESSIMISTIC_WRITE);
+		/*
+		 * We may already have a copy of the entity in the L1 cache, and it may be
+		 * stale if the scheduled maintenance service has touched it recently. So
+		 * we fetch it and then refresh-lock it so that we don't fail if someone
+		 * else has touched it.
+		 */
+		Batch2JobInstanceEntity instanceEntity = myEntityManager.find(Batch2JobInstanceEntity.class, theInstanceId);
+		myEntityManager.refresh(instanceEntity, LockModeType.PESSIMISTIC_WRITE);
+
 		if (null == instanceEntity) {
 			ourLog.error("No instance found with Id {}", theInstanceId);
 			return false;
