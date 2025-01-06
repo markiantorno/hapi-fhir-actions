@@ -17,42 +17,42 @@ jobs:
           java-version: '17'
           cache-path: $HOME/.m2/repository
           
-  # generate_module_list:
-  #   name: Generate List of Modules to Build
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     modules_list: ${{ steps.format_modules.outputs.modules_list }}
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
+  generate_module_list:
+    name: Generate List of Modules to Build
+    runs-on: ubuntu-latest
+    outputs:
+      modules_list: ${{ steps.format_modules.outputs.modules_list }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  #     - name: Generate Modules List
-  #       id: generate_list
-  #       uses: ./.github/actions/generate-module-list
-  #       with:
-  #         ignored_modules: 'hapi-fhir-bom,hapi-deployable-pom,hapi-fhir-spring-boot-sample-client-apache,hapi-fhir-spring-boot-sample-client-okhttp,hapi-fhir-spring-boot-starter,hapi-fhir-spring-boot-samples,hapi-fhir-validation-resources-dstu2.1,hapi-fhir-structures-r4b,hapi-fhir-validation-resources-r4b,hapi-fhir-jpa,hapi-fhir-serviceloaders,hapi-fhir-storage-batch2-test-utilities,hapi-fhir-cli,hapi-fhir-dist,hapi-fhir-jacoco,hapi-fhir-server-cds-hooks,hapi-fhir-caching-testing,hapi-fhir-cli-app,hapi-fhir-karaf-features,hapi-fhir-karaf-integration-tests,osgi'
+      - name: Generate Modules List
+        id: generate_list
+        uses: ./.github/actions/generate-module-list
+        with:
+          ignored_modules: 'hapi-fhir-bom,hapi-deployable-pom,hapi-fhir-spring-boot-sample-client-apache,hapi-fhir-spring-boot-sample-client-okhttp,hapi-fhir-spring-boot-starter,hapi-fhir-spring-boot-samples,hapi-fhir-validation-resources-dstu2.1,hapi-fhir-structures-r4b,hapi-fhir-validation-resources-r4b,hapi-fhir-jpa,hapi-fhir-serviceloaders,hapi-fhir-storage-batch2-test-utilities,hapi-fhir-cli,hapi-fhir-dist,hapi-fhir-jacoco,hapi-fhir-server-cds-hooks,hapi-fhir-caching-testing,hapi-fhir-cli-app,hapi-fhir-karaf-features,hapi-fhir-karaf-integration-tests,osgi'
 
-  #     - name: Format Modules List as JSON Array
-  #       id: format_modules
-  #       run: |
-  #         # Use jq to format the modules list as a JSON array
-  #         echo "modules_list=$(jq -R -s -c 'split(",") | map(gsub("[\\n]"; ""))' <<< '${{ steps.generate_list.outputs.modules_list }}')" >> $GITHUB_OUTPUT
+      - name: Format Modules List as JSON Array
+        id: format_modules
+        run: |
+          # Use jq to format the modules list as a JSON array
+          echo "modules_list=$(jq -R -s -c 'split(",") | map(gsub("[\\n]"; ""))' <<< '${{ steps.generate_list.outputs.modules_list }}')" >> $GITHUB_OUTPUT
           
-  #     - name: Print formatted modules as JSON
-  #       run: |
-  #         echo "Formatted JSON Array:"
-          # echo "${{ steps.format_modules.outputs.modules_list }}"
+      - name: Print formatted modules as JSON
+        run: |
+          echo "Formatted JSON Array:"
+          echo "${{ steps.format_modules.outputs.modules_list }}"
 
   test-module:
     runs-on: ubuntu-latest
     needs: 
       - build_cache
-      # - generate_module_list
+      - generate_module_list
 
     strategy:
       matrix:
-        module: ["hapi-fhir-jpaserver-test-r4"]
-        # module: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
+        # module: ["hapi-fhir-jpaserver-test-r4"]
+        module: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
       max-parallel: 256
       fail-fast: false
         
@@ -68,18 +68,18 @@ jobs:
         maven-cache-folder: $HOME/.m2/repository
         module-name: ${{ matrix.module }}
 
-  # assemble-test-reports:
-  #   runs-on: ubuntu-latest
-  #   needs: 
-  #     - test-module
+  assemble-test-reports:
+    runs-on: ubuntu-latest
+    needs: 
+      - test-module
 
-  #   steps:
-  #     # Step to check out the repository, which includes local actions
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
+    steps:
+      # Step to check out the repository, which includes local actions
+      - name: Checkout repository
+        uses: actions/checkout@v4
       
-  #     - uses: ./.github/actions/assemble-test-reports
-  #       with:
-  #         github_token: ${{ secrets.GITHUB_TOKEN }}
-  #         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-  #         modules: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
+      - uses: ./.github/actions/assemble-test-reports
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          modules: ${{ fromJSON(needs.generate_module_list.outputs.modules_list) }}
