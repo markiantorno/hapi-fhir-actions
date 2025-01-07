@@ -61,6 +61,6 @@ runs:
           echo "Downloaded and extracted artifact for $module."
 
           # Debug target directory
-          echo "Listing target directory for $module:"
-          ls -R "${GITHUB_WORKSPACE}/${module}/target/"
+          # echo "Listing target directory for $module:"
+          # ls -R "${GITHUB_WORKSPACE}/${module}/target/"
         done
