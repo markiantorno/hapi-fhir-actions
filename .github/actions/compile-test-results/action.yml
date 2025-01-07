@@ -27,7 +27,6 @@ runs:
         artifacts=$(gh api -H "Authorization: token $GH_TOKEN" \
                            -H "Accept: application/vnd.github.v3+json" \
                            "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts")
-                           
         echo "Available artifacts:"
         echo "$artifacts" | jq -r '.artifacts[] | .name'
   
@@ -66,6 +65,7 @@ runs:
           echo "Listing target directory for $module:"
           ls -R "${GITHUB_WORKSPACE}/${module}/target/"
         done
+
 
       # Debug directory listing after downloading and extracting the artifact
       # echo "Listing target directory for $module:"
