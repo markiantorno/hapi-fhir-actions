@@ -29,7 +29,7 @@ runs:
         gh api \
           -H "Authorization: token $GH_TOKEN" \
           -H "Accept: application/vnd.github.v3+json" \
-          "/repos/${{ github.repository }}/actions/artifacts" | jq -r '.artifacts[] | .name'
+          "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" | jq -r '.artifacts[] | .name'
         
         # Loop through each module using jq and avoid any issues with commas or whitespace
         echo "$modules" | jq -r '.[]' | while read -r module; do
@@ -66,7 +66,7 @@ runs:
           gh api \
             -H "Authorization: token $GH_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
-            "/repos/${{ github.repository }}/actions/artifacts/$artifact_id/zip" > "${GITHUB_WORKSPACE}/${module}/target/${cleaned_name}_target.zip"
+            "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/$artifact_id/zip" > "${GITHUB_WORKSPACE}/${module}/target/${cleaned_name}_target.zip"
                               
           # Unzip the artifact
           unzip "${GITHUB_WORKSPACE}/${module}/target/${cleaned_name}_target.zip" -d "${GITHUB_WORKSPACE}/${module}/target/"
