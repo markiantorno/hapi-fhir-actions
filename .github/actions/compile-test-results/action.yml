@@ -14,56 +14,58 @@ inputs:
 
 runs:
   using: "composite"
-  steps:
-    - name: Iterate through modules and download artifacts
-      shell: bash
-      run: |
-        # Set the GitHub token
-        export GH_TOKEN="${{ inputs.github_token }}"
+steps:
+  - name: Iterate through modules and download artifacts
+    shell: bash
+    run: |
+      export GH_TOKEN="${{ inputs.github_token }}"
+      modules='${{ inputs.modules }}'
 
-        # Ensure modules input is parsed correctly
-        modules='${{ inputs.modules }}'
-        echo "Processing modules: $modules"
+      echo "Processing modules: $modules"
 
-        # List and fetch artifacts for the current workflow
-        echo "Fetching artifacts for workflow run ID: ${{ github.run_id }}"
-        artifacts=$(gh api -H "Authorization: token $GH_TOKEN" \
-                           -H "Accept: application/vnd.github.v3+json" \
-                           "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts")
-        echo "Available artifacts:"
-        echo "$artifacts" | jq -r '.artifacts[] | .name'
-        
-        # Process modules and match artifacts
-        echo "$modules" | jq -r '.[]' | while read -r module; do
-          echo "Processing module: $module"
-          
-          # Clean module name
-          cleaned_name=$(basename "$module")
-          echo "Cleaned module name: $cleaned_name"
+      echo "Fetching artifacts for workflow run ID: ${{ github.run_id }}"
+      artifacts=$(gh api -H "Authorization: token $GH_TOKEN" \
+                         -H "Accept: application/vnd.github.v3+json" \
+                         "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts")
+      echo "Available artifacts:"
+      echo "$artifacts" | jq -r '.artifacts[] | .name'
 
-          artifact_id=$(gh api -H "Authorization: token $GH_TOKEN" \
-          -H "Accept: application/vnd.github.v3+json" \
-          "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" | \
-          jq -r --arg name "${cleaned_name}_target" '.artifacts[] | select(.name == $name) | .id')
-          
-          if [ -z "$artifact_id" ]; then
-            echo "Artifact not found for $cleaned_name."
-            exit 1
-          fi
+      echo "$modules" | jq -r '.[]' | while read -r module; do
+        echo "Processing module: $module"
 
-          # Download the artifact
-          echo "Downloading artifact $cleaned_name (ID: $artifact_id)..."
-          gh api -H "Authorization: token $GH_TOKEN" \
-                 -H "Accept: application/vnd.github.v3+json" \
-                 "/repos/${{ github.repository }}/actions/artifacts/$artifact_id/zip" > "${GITHUB_WORKSPACE}/${module}/target/${cleaned_name}_target.zip"
+        # Clean module name
+        cleaned_name=$(basename "$module")
+        echo "Cleaned module name: $cleaned_name"
 
-          # Unzip the artifact
-          unzip "${GITHUB_WORKSPACE}/${module}/target/${cleaned_name}_target.zip" -d "${GITHUB_WORKSPACE}/${module}/target/"
-          echo "Downloaded and extracted artifact for $module."
+        # Find artifact ID
+        artifact_id=$(echo "$artifacts" | jq -r --arg name "${cleaned_name}_target" '.artifacts[] | select(.name == $name) | .id')
 
-          # Debug directory listing after downloading and extracting the artifact
-          # echo "Listing target directory for $module:"
-          # ls "${GITHUB_WORKSPACE}/${module}/target/"
-        done
+        if [ -z "$artifact_id" ]; then
+          echo "Artifact not found for $cleaned_name."
+          exit 1
+        fi
 
+        # Create target directory
+        mkdir -p "${GITHUB_WORKSPACE}/${module}/target/"
 
+        # Download artifact
+        echo "Downloading artifact $cleaned_name (ID: $artifact_id)..."
+        if ! gh api -H "Authorization: token $GH_TOKEN" \
+                    -H "Accept: application/vnd.github.v3+json" \
+                    "/repos/${{ github.repository }}/actions/artifacts/$artifact_id/zip" > "${GITHUB_WORKSPACE}/${module}/target/${cleaned_name}_target.zip"; then
+          echo "Failed to download artifact for $cleaned_name."
+          exit 1
+        fi
+
+        # Unzip artifact
+        unzip "${GITHUB_WORKSPACE}/${module}/target/${cleaned_name}_target.zip" -d "${GITHUB_WORKSPACE}/${module}/target/"
+        echo "Downloaded and extracted artifact for $module."
+
+        # Debug target directory
+        echo "Listing target directory for $module:"
+        ls -R "${GITHUB_WORKSPACE}/${module}/target/"
+      done
+
+      # Debug directory listing after downloading and extracting the artifact
+      # echo "Listing target directory for $module:"
+      # ls "${GITHUB_WORKSPACE}/${module}/target/"
