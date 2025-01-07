@@ -71,6 +71,7 @@ jobs:
   assemble-test-reports:
     runs-on: ubuntu-latest
     needs: 
+      - generate_module_list
       - test-module
 
     steps:
