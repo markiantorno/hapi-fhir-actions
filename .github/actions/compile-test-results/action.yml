@@ -25,53 +25,44 @@ runs:
         modules='${{ inputs.modules }}'
         echo "Processing modules: $modules"
 
-        # Log all artifact names
-        gh api \
-          -H "Authorization: token $GH_TOKEN" \
-          -H "Accept: application/vnd.github.v3+json" \
-          "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" | jq -r '.artifacts[] | .name'
+        # List and fetch artifacts for the current workflow
+        echo "Fetching artifacts for workflow run ID: ${{ github.run_id }}"
+        artifacts=$(gh api -H "Authorization: token $GH_TOKEN" \
+                           -H "Accept: application/vnd.github.v3+json" \
+                           "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts")
+        echo "Available artifacts:"
+        echo "$artifacts" | jq -r '.artifacts[] | .name'
         
-        # Loop through each module using jq and avoid any issues with commas or whitespace
+        # Process modules and match artifacts
         echo "$modules" | jq -r '.[]' | while read -r module; do
           echo "Processing module: $module"
           
-          # Create the target directory for each module
-          mkdir -p "${GITHUB_WORKSPACE}/$module/target"
-          
-          # Clean Module Name (basename logic)
+          # Clean module name
           cleaned_name=$(basename "$module")
           echo "Cleaned module name: $cleaned_name"
-                    
-          # Fetch the artifact list and filter for the correct artifact
-          artifact_id=$(gh api \
-            -H "Authorization: token $GH_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" | \
-            jq -r --arg name "${cleaned_name}_target" '
-              .artifacts[] | select(.name == $name) | .id' | head -n 1)
-          
+        
+          # Find artifact ID by name
+          artifact_id=$(echo "$artifacts" | jq -r --arg name "${cleaned_name}_target" '
+            .artifacts[] | select(.name == $name) | .id' | head -n 1)
+        
           if [ -z "$artifact_id" ]; then
-            echo "Available artifacts:"
-            gh api \
-              -H "Authorization: token $GH_TOKEN" \
-              -H "Accept: application/vnd.github.v3+json" \
-              "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" | jq -r '.artifacts[] | .name'
-            
-            echo "Failed to find artifact: ${cleaned_name}_target"
+            echo "Artifact not found for $cleaned_name."
             exit 1
           fi
-
-          # Download the artifact using the artifact ID
-          echo "Downloading artifact for $cleaned_name with ID $artifact_id..."
-          gh api \
-            -H "Authorization: token $GH_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/$artifact_id/zip" > "${GITHUB_WORKSPACE}/${module}/target/${cleaned_name}_target.zip"
-                              
+        
+          # Download the artifact
+          echo "Downloading artifact $cleaned_name (ID: $artifact_id)..."
+          gh api -H "Authorization: token $GH_TOKEN" \
+                 -H "Accept: application/vnd.github.v3+json" \
+                 "/repos/${{ github.repository }}/actions/artifacts/$artifact_id/zip" > "${GITHUB_WORKSPACE}/${module}/target/${cleaned_name}_target.zip"
+        
           # Unzip the artifact
           unzip "${GITHUB_WORKSPACE}/${module}/target/${cleaned_name}_target.zip" -d "${GITHUB_WORKSPACE}/${module}/target/"
-          
+          echo "Downloaded and extracted artifact for $module."
+
           # Debug directory listing after downloading and extracting the artifact
-          echo "Listing target directory for $module:"
-          ls "${GITHUB_WORKSPACE}/${module}/target/"
+          # echo "Listing target directory for $module:"
+          # ls "${GITHUB_WORKSPACE}/${module}/target/"
         done
+
+
