@@ -24,6 +24,12 @@ runs:
         # Ensure modules input is parsed correctly
         modules='${{ inputs.modules }}'
         echo "Processing modules: $modules"
+
+        # Log all artifact names
+        gh api \
+          -H "Authorization: token $GH_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          "/repos/${{ github.repository }}/actions/artifacts" | jq -r '.artifacts[] | .name'
         
         # Loop through each module using jq and avoid any issues with commas or whitespace
         echo "$modules" | jq -r '.[]' | while read -r module; do
@@ -40,14 +46,21 @@ runs:
           artifact_id=$(gh api \
             -H "Authorization: token $GH_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
-            "/repos/${{ github.repository }}/actions/artifacts" | \
-            jq -r --arg name "${cleaned_name}_target" '.artifacts[] | select(.name == $name) | .id' | head -n 1)
+            "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" | \
+            jq -r --arg name "${cleaned_name}_target" '
+              .artifacts[] | select(.name == $name) | .id' | head -n 1)
           
           if [ -z "$artifact_id" ]; then
-            echo "Artifact $cleaned_name not found."
+            echo "Available artifacts:"
+            gh api \
+              -H "Authorization: token $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" | jq -r '.artifacts[] | .name'
+            
+            echo "Failed to find artifact: ${cleaned_name}_target"
             exit 1
           fi
-          
+
           # Download the artifact using the artifact ID
           echo "Downloading artifact for $cleaned_name with ID $artifact_id..."
           gh api \
