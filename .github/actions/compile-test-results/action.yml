@@ -9,13 +9,16 @@ inputs:
     description: GitHub token for API authentication
     required: true
     type: string
+    
 runs:
   using: composite
   steps:
     - name: List available artifacts (debug)
       shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}  
       run: |
-        gh api -H "Authorization: token ${{ inputs.github_token }}" \
+        gh api -H "Authorization: token $GH_TOKEN" \
                -H "Accept: application/vnd.github.v3+json" \
                "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
         | jq -r '.artifacts[] | .name'
