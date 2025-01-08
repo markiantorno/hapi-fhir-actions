@@ -14,6 +14,13 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: List available artifacts (debug)
+    run: |
+      gh api -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+             -H "Accept: application/vnd.github.v3+json" \
+             "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
+      | jq -r '.artifacts[] | .name'
+      
     - name: Download all artifacts
       uses: actions/download-artifact@v3
       with:
@@ -50,6 +57,6 @@ runs:
           echo "Extracted artifact for $module."
 
           # Debug target directory
-          echo "Listing target directory for $module:"
-          ls -R "${GITHUB_WORKSPACE}/${module}/target/"
+          # echo "Listing target directory for $module:"
+          # ls -R "${GITHUB_WORKSPACE}/${module}/target/"
         done
