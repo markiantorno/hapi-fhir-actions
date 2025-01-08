@@ -13,15 +13,18 @@ runs:
   using: composite
   steps:
     - name: List available artifacts (debug)
+      shell: bash
       run: |
-        gh api -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+        gh api -H "Authorization: token ${{ inputs.github_token }}" \
                -H "Accept: application/vnd.github.v3+json" \
                "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
         | jq -r '.artifacts[] | .name'
+        
     - name: Download all artifacts
       uses: actions/download-artifact@v3
       with:
         path: '${GITHUB_WORKSPACE}/artifacts'
+        
     - name: Iterate through modules and process downloaded artifacts
       shell: bash
       run: |
