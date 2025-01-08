@@ -1,6 +1,5 @@
 name: Download and Process Artifacts
 description: Downloads artifacts for a list of modules and prepares them for further steps.
-
 inputs:
   modules:
     description: A JSON list of modules to process
@@ -10,22 +9,19 @@ inputs:
     description: GitHub token for API authentication
     required: true
     type: string
-    
 runs:
   using: composite
   steps:
     - name: List available artifacts (debug)
-    run: |
-      gh api -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-             -H "Accept: application/vnd.github.v3+json" \
-             "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
-      | jq -r '.artifacts[] | .name'
-      
+      run: |
+        gh api -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
+        | jq -r '.artifacts[] | .name'
     - name: Download all artifacts
       uses: actions/download-artifact@v3
       with:
-        path: "${GITHUB_WORKSPACE}/artifacts"
-
+        path: '${GITHUB_WORKSPACE}/artifacts'
     - name: Iterate through modules and process downloaded artifacts
       shell: bash
       run: |
