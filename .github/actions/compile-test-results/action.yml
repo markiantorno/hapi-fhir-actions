@@ -33,6 +33,12 @@ runs:
       run: |
         echo "Listing top-level directories and files in ${GITHUB_WORKSPACE}/artifacts:"
         ls -lh "${GITHUB_WORKSPACE}/artifacts"
+
+    - name: List adroid directory contents
+      shell: bash
+      run: |
+        echo "Listing top-level directories and files in ${GITHUB_WORKSPACE}/artifacts/hapi-fhir-android_target:"
+        ls -lh "${GITHUB_WORKSPACE}/artifacts/hapi-fhir-android_target"
     
     - name: Iterate through modules and process downloaded artifacts
       shell: bash
