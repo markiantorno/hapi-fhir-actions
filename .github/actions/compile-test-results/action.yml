@@ -33,12 +33,6 @@ runs:
       run: |
         echo "Listing top-level directories and files in ${GITHUB_WORKSPACE}/artifacts:"
         ls -lh "${GITHUB_WORKSPACE}/artifacts"
-
-    - name: List adroid directory contents
-      shell: bash
-      run: |
-        echo "Listing top-level directories and files in ${GITHUB_WORKSPACE}/artifacts/hapi-fhir-android_target:"
-        ls -lh "${GITHUB_WORKSPACE}/artifacts/hapi-fhir-android_target"
     
     - name: Iterate through modules and process downloaded artifacts
       shell: bash
@@ -55,22 +49,20 @@ runs:
           cleaned_name=$(basename "$module")
           echo "Cleaned module name: $cleaned_name"
 
-          # Locate artifact for the module
-          artifact_zip="${GITHUB_WORKSPACE}/artifacts/${cleaned_name}_target.zip"
-          if [ ! -f "$artifact_zip" ]; then
-            echo "Artifact not found for $cleaned_name at expected path: $artifact_zip"
+          # Check if the directory exists
+          artifact_dir="${GITHUB_WORKSPACE}/artifacts/${cleaned_name}_target"
+          if [ ! -d "$artifact_dir" ]; then
+            echo "Error: Directory not found for ${cleaned_name}_target at expected path: $artifact_dir"
+            echo "Available directories in ${GITHUB_WORKSPACE}/artifacts/:"
+            find "${GITHUB_WORKSPACE}/artifacts" -mindepth 1 -maxdepth 1 -type d -exec basename {} \;
             exit 1
           fi
 
           # Create target directory
           mkdir -p "${GITHUB_WORKSPACE}/${module}/target/"
-
-          # Move and unzip the artifact
-          echo "Unzipping artifact for $module..."
-          unzip "$artifact_zip" -d "${GITHUB_WORKSPACE}/${module}/target/"
-          echo "Extracted artifact for $module."
-
-          # Debug target directory
-          # echo "Listing target directory for $module:"
-          # ls -R "${GITHUB_WORKSPACE}/${module}/target/"
+          
+          # Move all contents from the artifact directory to the target directory
+          echo "Moving contents of $artifact_dir to $target_dir..."
+          mv "$artifact_dir"/* "$target_dir"
+          echo "Moved contents for $module."
         done
