@@ -27,7 +27,12 @@ runs:
       uses: actions/download-artifact@v4
       with:
         path: '${GITHUB_WORKSPACE}/artifacts'
-        
+
+    - name: List top-level directories and files in artifacts
+      run: |
+        echo "Listing top-level directories and files in ${GITHUB_WORKSPACE}/artifacts:"
+        ls -lh "${GITHUB_WORKSPACE}/artifacts"
+    
     - name: Iterate through modules and process downloaded artifacts
       shell: bash
       run: |
