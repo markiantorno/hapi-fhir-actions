@@ -29,6 +29,7 @@ runs:
         path: '${GITHUB_WORKSPACE}/artifacts'
 
     - name: List top-level directories and files in artifacts
+      shell: bash
       run: |
         echo "Listing top-level directories and files in ${GITHUB_WORKSPACE}/artifacts:"
         ls -lh "${GITHUB_WORKSPACE}/artifacts"
