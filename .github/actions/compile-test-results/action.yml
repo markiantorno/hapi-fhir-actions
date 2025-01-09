@@ -63,6 +63,6 @@ runs:
           
           # Move all contents from the artifact directory to the target directory
           echo "Moving contents of $artifact_dir to $target_dir..."
-          mv "$artifact_dir"/* "$target_dir"
+          mv "${GITHUB_WORKSPACE}/artifacts/${cleaned_name}_target"/* "${GITHUB_WORKSPACE}/${module}/target/"
           echo "Moved contents for $module."
         done
