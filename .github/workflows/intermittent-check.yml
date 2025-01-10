@@ -18,14 +18,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Fetch all history for comparison
+      - name: Ensure target branch exists locally
         run: |
-          git fetch --no-tags --prune --refetch origin master
+          git fetch origin ${{ github.base_ref }}:$GITHUB_BASE_REF
 
       - name: Identify changed files
         id: changed_files
         run: |
-          git diff --name-only origin/master...HEAD > changed_files.txt
+          git diff --name-only $GITHUB_BASE_REF...HEAD > changed_files.txt
           cat changed_files.txt
 
       - name: Filter Java test files
