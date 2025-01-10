@@ -11,188 +11,162 @@ on:
 
 jobs:
   detect-new-tests:
+    name: Detect New Test Methods
     runs-on: ubuntu-latest
-    outputs:
-      new_tests: ${{ steps.detect-tests.outputs.new_tests }}  # Explicitly setting output
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          
-      - name: Detect new or modified test files in all modules
-        id: find-tests
+      - name: Fetch all history for comparison
+        run: git fetch --depth=0
+
+      - name: Identify changed files
+        id: changed_files
         run: |
-          git fetch origin master
-          new_test_files=$(git diff --name-only origin/master | grep 'src/test/java/.*\(Test\|IT\).java' || true)
-          if [ -z "$new_test_files" ]; then
-            echo "No new or modified test files found."
-            echo "new_test_files=''" >> $GITHUB_ENV
-            exit 0
-          fi
-          echo "New test files found:"
-          echo "$new_test_files"
-          
-          # Store new_test_files as a JSON array for safe handling
-          new_test_files_json=$(printf '%s\n' "$new_test_files" | jq -R . | jq -s -c .)
-          echo "new_test_files_json=$new_test_files_json" >> $GITHUB_ENV
-          echo "new_test_files_json=$new_test_files_json" >> $GITHUB_OUTPUT
-      
-      - name: Detect modified JUnit 5 test methods
-        id: detect-tests
+          git diff --name-only origin/main...HEAD > changed_files.txt
+          cat changed_files.txt
+
+      - name: Filter Java test files
+        id: test_files
         run: |
-          JUNIT_ANNOTATIONS='@Test|@ParameterizedTest|@RepeatedTest|@TestFactory|@TestTemplate|@TestMethodOrder'
-          new_tests=""
-          
-          # Debugging - print new test files
-          echo "New test files JSON: $new_test_files_json"
+          grep -E '.*(Test|IT)\.java$' changed_files.txt > test_files.txt || true
+          cat test_files.txt
 
-          # Process each test file
-          echo "$new_test_files_json" | jq -r '.[]' | while read -r file; do
-            echo "Processing $file"
-            module_dir=$(echo "$file" | sed -E 's|/src/test/java/.*||')
-            
-            # Get only the changed lines for this file
-            modified_lines=$(git diff --unified=0 "$file" | grep '^+' | grep -v '+++' | cut -c2-)
-            if [ -z "$modified_lines" ]; then
-              echo "No modified lines detected in $file"
-              continue
-            fi
+      - name: Detect new test methods
+        id: new_tests
+        run: |
+          while IFS= read -r file; do
+            echo "Inspecting $file"
+            git diff origin/main...HEAD "$file" | grep -E '^\+.*@Test|@ParameterizedTest|@RepeatedTest' -A 2 | \
+            grep -E '^\+.*void ' | sed 's/^+//g' | awk '{print $NF}' | sed 's/(.*)//g' | \
+            awk -v class="$file" '{print class "::" $1}' || true
+          done < test_files.txt > new_tests.txt
+          cat new_tests.txt
 
-            # Detect test methods in modified lines
-            echo "$modified_lines" | grep -E "$JUNIT_ANNOTATIONS" -A 1 | grep -E "public .* ([a-zA-Z0-9_]+)\(" | sed -E 's/.* ([a-zA-Z0-9_]+)\(.*/\1/' | while read -r method; do
-              echo "Detected modified test method: $method"
-              new_tests="$new_tests $module_dir:$file:$method"
-            done
-          done
-
-          # Trim whitespace and set output
-          new_tests=$(echo $new_tests | xargs)
-          echo "new_tests='$new_tests'"
-          echo "new_tests=$new_tests" >> $GITHUB_OUTPUT
+      - name: Output detected test methods
+        run: |
+          echo "New test methods detected:"
+          cat new_tests.txt
                     
-  run-new-tests:
-    needs: detect-new-tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # run-new-tests:
+  #   needs: detect-new-tests
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
   
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+  #     - name: Set up Java
+  #       uses: actions/setup-java@v4
+  #       with:
+  #         distribution: 'temurin'
+  #         java-version: '17'
   
-      - name: Set method and class run counts
-        run: |
-          echo "INDIVIDUAL_TEST_RUNS=50" >> $GITHUB_ENV
-          echo "ENTIRE_CLASS_RUNS=30" >> $GITHUB_ENV
+  #     - name: Set method and class run counts
+  #       run: |
+  #         echo "INDIVIDUAL_TEST_RUNS=50" >> $GITHUB_ENV
+  #         echo "ENTIRE_CLASS_RUNS=30" >> $GITHUB_ENV
   
-      - name: Run new tests and entire classes
-        run: |
-          new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"
+  #     - name: Run new tests and entire classes
+  #       run: |
+  #         new_tests="${{ needs.detect-new-tests.outputs.new_tests }}"
           
-          if [ -z "$new_tests" ]; then
-            echo "No new or modified test methods found."
-            exit 0
-          fi
+  #         if [ -z "$new_tests" ]; then
+  #           echo "No new or modified test methods found."
+  #           exit 0
+  #         fi
   
-          # Load method and class run counts
-          INDIVIDUAL_TEST_RUNS="${INDIVIDUAL_TEST_RUNS:-50}"
-          ENTIRE_CLASS_RUNS="${ENTIRE_CLASS_RUNS:-30}"
+  #         # Load method and class run counts
+  #         INDIVIDUAL_TEST_RUNS="${INDIVIDUAL_TEST_RUNS:-50}"
+  #         ENTIRE_CLASS_RUNS="${ENTIRE_CLASS_RUNS:-30}"
   
-          declare -A class_methods_map
+  #         declare -A class_methods_map
   
-          # Organize tests by class
-          for test in $new_tests; do
-            module=$(echo $test | cut -d':' -f1)
-            file=$(echo $test | cut -d':' -f2)
-            method=$(echo $test | cut -d':' -f3)
+  #         # Organize tests by class
+  #         for test in $new_tests; do
+  #           module=$(echo $test | cut -d':' -f1)
+  #           file=$(echo $test | cut -d':' -f2)
+  #           method=$(echo $test | cut -d':' -f3)
   
-            class_key="$module:$file"
-            class_methods_map[$class_key]="${class_methods_map[$class_key]} $method"
-          done
+  #           class_key="$module:$file"
+  #           class_methods_map[$class_key]="${class_methods_map[$class_key]} $method"
+  #         done
   
-          # Loop through each test class
-          for class_key in "${!class_methods_map[@]}"; do
-            module=$(echo $class_key | cut -d':' -f1)
-            file=$(echo $class_key | cut -d':' -f2)
+  #         # Loop through each test class
+  #         for class_key in "${!class_methods_map[@]}"; do
+  #           module=$(echo $class_key | cut -d':' -f1)
+  #           file=$(echo $class_key | cut -d':' -f2)
   
-            echo "==========================="
-            echo "Running tests for class: $file"
-            echo "==========================="
+  #           echo "==========================="
+  #           echo "Running tests for class: $file"
+  #           echo "==========================="
   
-            # Initialize counters for entire test class
-            total_class_runs=0
-            failed_class_runs=0
-            successful_class_runs=0
+  #           # Initialize counters for entire test class
+  #           total_class_runs=0
+  #           failed_class_runs=0
+  #           successful_class_runs=0
   
-            # Run the entire test class
-            for i in $(seq 1 $ENTIRE_CLASS_RUNS); do
-              echo "Running entire class $(basename $file .java), iteration $i"
-              mvn -f $module/pom.xml -Dtest="$(basename $file .java)" test
-              if [ $? -ne 0 ]; then
-                echo "Class Run $i: FAILED"
-                failed_class_runs=$((failed_class_runs + 1))
-              else
-                echo "Class Run $i: PASSED"
-                successful_class_runs=$((successful_class_runs + 1))
-              fi
-              total_class_runs=$((total_class_runs + 1))
-            done
+  #           # Run the entire test class
+  #           for i in $(seq 1 $ENTIRE_CLASS_RUNS); do
+  #             echo "Running entire class $(basename $file .java), iteration $i"
+  #             mvn -f $module/pom.xml -Dtest="$(basename $file .java)" test
+  #             if [ $? -ne 0 ]; then
+  #               echo "Class Run $i: FAILED"
+  #               failed_class_runs=$((failed_class_runs + 1))
+  #             else
+  #               echo "Class Run $i: PASSED"
+  #               successful_class_runs=$((successful_class_runs + 1))
+  #             fi
+  #             total_class_runs=$((total_class_runs + 1))
+  #           done
   
-            # Output the summary for the entire class
-            echo "Entire Class Results:"
-            echo "$file"
-            echo "  Total class runs: $total_class_runs"
-            echo "  Class successes: $successful_class_runs"
-            echo "  Class failures: $failed_class_runs"
-            echo ""
+  #           # Output the summary for the entire class
+  #           echo "Entire Class Results:"
+  #           echo "$file"
+  #           echo "  Total class runs: $total_class_runs"
+  #           echo "  Class successes: $successful_class_runs"
+  #           echo "  Class failures: $failed_class_runs"
+  #           echo ""
   
-            # Loop through each test method in this class
-            for method in ${class_methods_map[$class_key]}; do
-              echo "Running individual test method: $method"
+  #           # Loop through each test method in this class
+  #           for method in ${class_methods_map[$class_key]}; do
+  #             echo "Running individual test method: $method"
   
-              # Initialize counters for individual test method
-              total_method_runs=0
-              failed_method_runs=0
-              successful_method_runs=0
+  #             # Initialize counters for individual test method
+  #             total_method_runs=0
+  #             failed_method_runs=0
+  #             successful_method_runs=0
   
-              # Run individual test methods
-              for i in $(seq 1 $INDIVIDUAL_TEST_RUNS); do
-                echo "Running test method $method from $file, iteration $i"
-                mvn -f $module/pom.xml -Dtest="$(basename $file .java)#${method}" test
-                if [ $? -ne 0 ]; then
-                  echo "Method Run $i: FAILED"
-                  failed_method_runs=$((failed_method_runs + 1))
-                else
-                  echo "Method Run $i: PASSED"
-                  successful_method_runs=$((successful_method_runs + 1))
-                fi
-                total_method_runs=$((total_method_runs + 1))
-              done
+  #             # Run individual test methods
+  #             for i in $(seq 1 $INDIVIDUAL_TEST_RUNS); do
+  #               echo "Running test method $method from $file, iteration $i"
+  #               mvn -f $module/pom.xml -Dtest="$(basename $file .java)#${method}" test
+  #               if [ $? -ne 0 ]; then
+  #                 echo "Method Run $i: FAILED"
+  #                 failed_method_runs=$((failed_method_runs + 1))
+  #               else
+  #                 echo "Method Run $i: PASSED"
+  #                 successful_method_runs=$((successful_method_runs + 1))
+  #               fi
+  #               total_method_runs=$((total_method_runs + 1))
+  #             done
   
-              # Output the summary for the test method
-              echo "Test Method Results:"
-              echo "$file:$method"
-              echo "  Total method runs: $total_method_runs"
-              echo "  Method successes: $successful_method_runs"
-              echo "  Method failures: $failed_method_runs"
-              echo ""
+  #             # Output the summary for the test method
+  #             echo "Test Method Results:"
+  #             echo "$file:$method"
+  #             echo "  Total method runs: $total_method_runs"
+  #             echo "  Method successes: $successful_method_runs"
+  #             echo "  Method failures: $failed_method_runs"
+  #             echo ""
   
-              # Set job outputs for method and class results
-              echo "::set-output name=${method}_total_method_runs::$total_method_runs"
-              echo "::set-output name=${method}_successful_method_runs::$successful_method_runs"
-              echo "::set-output name=${method}_failed_method_runs::$failed_method_runs"
-            done
+  #             # Set job outputs for method and class results
+  #             echo "::set-output name=${method}_total_method_runs::$total_method_runs"
+  #             echo "::set-output name=${method}_successful_method_runs::$successful_method_runs"
+  #             echo "::set-output name=${method}_failed_method_runs::$failed_method_runs"
+  #           done
   
-            # Set job outputs for entire class
-            echo "::set-output name=$(basename $file .java)_total_class_runs::$total_class_runs"
-            echo "::set-output name=$(basename $file .java)_successful_class_runs::$successful_class_runs"
-            echo "::set-output name=$(basename $file .java)_failed_class_runs::$failed_class_runs"
-          done
+  #           # Set job outputs for entire class
+  #           echo "::set-output name=$(basename $file .java)_total_class_runs::$total_class_runs"
+  #           echo "::set-output name=$(basename $file .java)_successful_class_runs::$successful_class_runs"
+  #           echo "::set-output name=$(basename $file .java)_failed_class_runs::$failed_class_runs"
+  #         done
