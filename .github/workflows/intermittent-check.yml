@@ -52,7 +52,8 @@ jobs:
             echo "Inspecting $file"
             git diff origin/master...HEAD "$file" | grep -E '^\+.*@Test|@ParameterizedTest|@RepeatedTest' -A 2 | \
             grep -E '^\+.*void ' | sed 's/^+//g' | \
-            sed -E 's/\s*\(.*\)//g' | awk -v class="$file" '{print class "::" $NF}' || true
+            awk -F'[ (]' '{print $2}' | sed 's/[{}]//g' | \
+            awk -v class="$file" '{print class "::" $1}' || true
           done < test_files.txt > new_tests.txt
           cat new_tests.txt
 
