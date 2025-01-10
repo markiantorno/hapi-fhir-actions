@@ -74,19 +74,22 @@ jobs:
           while IFS= read -r line; do
             test_file=$(echo "$line" | awk -F '::' '{print $1}')
             test_name=$(echo "$line" | awk -F '::' '{print $2}')
-            
-            echo "Running $test_name in $test_file"
+
+            # Extract class name from file path
+            test_class=$(basename "$test_file" .java)
+
+            echo "Running $test_name in $test_class"
             
             # Run the test
-            mvn test -Dtest="${test_file}:${test_name}" | tee test_output.log
-      
+            mvn test -Dtest="${test_class}#${test_name}" | tee test_output.log
+
             # Capture result
             if [ ${PIPESTATUS[0]} -ne 0 ]; then
-              echo "Test $test_name in $test_file failed."
+              echo "Test $test_name in $test_class failed."
             else
-              echo "Test $test_name in $test_file passed."
+              echo "Test $test_name in $test_class passed."
             fi
-      
+
           done < new_tests.txt
 
                     
