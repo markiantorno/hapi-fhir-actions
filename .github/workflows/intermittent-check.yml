@@ -62,6 +62,25 @@ jobs:
           echo "New test methods detected:"
           cat new_tests.txt
 
+      - name: Run new test methods
+        run: |
+          while IFS= read -r line; do
+            test_file=$(echo "$line" | awk -F '::' '{print $1}')
+            test_name=$(echo "$line" | awk -F '::' '{print $2}')
+            
+            echo "Running $test_name in $test_file"
+            
+            # Run the test
+            mvn test -Dtest="${test_file}:${test_name}" | tee test_output.log
+      
+            # Capture result
+            if [ ${PIPESTATUS[0]} -ne 0 ]; then
+              echo "Test $test_name in $test_file failed."
+            else
+              echo "Test $test_name in $test_file passed."
+            fi
+      
+          done < new_tests.txt
 
                     
   # run-new-tests:
