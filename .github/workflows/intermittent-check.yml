@@ -9,6 +9,7 @@ on:
       - synchronize
       - reopened
 
+
 jobs:
   detect-new-tests:
     name: Detect New Test Methods
@@ -17,15 +18,26 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
-      - name: Ensure target branch exists locally
+        with:
+          fetch-depth: 0 # Fetch the entire history to ensure proper comparisons
+
+      - name: Fetch master branch
         run: |
-          git fetch origin ${{ github.base_ref }}:$GITHUB_BASE_REF
+          git fetch origin master
+
+      - name: Ensure merge base exists
+        run: |
+          if ! git merge-base HEAD origin/master; then
+            echo "Creating a temporary merge base"
+            git checkout -b temp_base origin/master
+            git merge --allow-unrelated-histories --no-commit HEAD
+            git checkout -f HEAD
+          fi
 
       - name: Identify changed files
         id: changed_files
         run: |
-          git diff --name-only $GITHUB_BASE_REF...HEAD > changed_files.txt
+          git diff --name-only origin/master...HEAD > changed_files.txt
           cat changed_files.txt
 
       - name: Filter Java test files
