@@ -52,7 +52,7 @@ jobs:
             echo "Inspecting $file"
             git diff origin/master...HEAD "$file" | grep -E '^\+.*@Test|@ParameterizedTest|@RepeatedTest' -A 2 | \
             grep -E '^\+.*void ' | sed 's/^+//g' | \
-            awk -F'[ (]' '{print $2}' | sed 's/[{}]//g' | \
+            grep -oP '(?<=void )\w+(?=\()' | \
             awk -v class="$file" '{print class "::" $1}' || true
           done < test_files.txt > new_tests.txt
           cat new_tests.txt
@@ -61,6 +61,7 @@ jobs:
         run: |
           echo "New test methods detected:"
           cat new_tests.txt
+
 
                     
   # run-new-tests:
