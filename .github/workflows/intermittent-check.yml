@@ -31,9 +31,16 @@ jobs:
           new_test_files=$(git diff --name-only origin/master | grep 'src/test/java/.*\(Test\|IT\).java' || true)
           if [ -z "$new_test_files" ]; then
             echo "No new or modified test files found."
+            echo "new_test_files=''" >> $GITHUB_ENV
             exit 0
           fi
-          echo "new_test_files=$new_test_files" >> $GITHUB_ENV
+          echo "New test files found:"
+          echo "$new_test_files"
+          
+          # Store new_test_files as a JSON array for safe handling
+          new_test_files_json=$(printf '%s\n' "$new_test_files" | jq -R . | jq -s .)
+          echo "new_test_files_json=$new_test_files_json" >> $GITHUB_ENV
+          echo "new_test_files_json=$new_test_files_json" >> $GITHUB_OUTPUT
       
       - name: Detect new JUnit 5 test methods
         id: detect-tests
@@ -44,7 +51,8 @@ jobs:
           # Debugging - print new test files
           echo "New test files: $new_test_files"
           
-          for file in $new_test_files; do
+          echo "Processing new test files:"
+          echo "$new_test_files_json" | jq -r '.[]' | while read -r file; do
             echo "Processing $file"
             module_dir=$(echo "$file" | sed -E 's|/src/test/java/.*||')
             
