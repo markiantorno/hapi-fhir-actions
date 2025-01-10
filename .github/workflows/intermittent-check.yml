@@ -68,19 +68,34 @@ jobs:
         run: |
           echo "New test methods detected:"
           cat new_tests.txt
-
+          
       - name: Run new test methods
         run: |
           while IFS= read -r line; do
+            # Debug: Print the current line being processed
+            echo "Processing line: $line"
+
+            # Extract test file and method
             test_file=$(echo "$line" | awk -F '::' '{print $1}')
             test_name=$(echo "$line" | awk -F '::' '{print $2}')
+
+            # Debug: Print extracted file and method
+            echo "Test file: $test_file"
+            echo "Test method: $test_name"
+
+            # Ensure both file and method are non-empty
+            if [ -z "$test_file" ] || [ -z "$test_name" ]; then
+              echo "Error: Missing file or method in line: $line"
+              continue
+            fi
 
             # Extract class name from file path
             test_class=$(basename "$test_file" .java)
 
+            # Debug: Print the test class name
             echo "Running $test_name in $test_class"
-            
-            # Run the test
+
+            # Run the test using Maven
             mvn test -Dtest="${test_class}#${test_name}" | tee test_output.log
 
             # Capture result
@@ -91,6 +106,7 @@ jobs:
             fi
 
           done < new_tests.txt
+
 
                     
   # run-new-tests:
