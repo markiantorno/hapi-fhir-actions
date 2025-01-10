@@ -42,7 +42,7 @@ jobs:
           echo "new_test_files_json=$new_test_files_json" >> $GITHUB_ENV
           echo "new_test_files_json=$new_test_files_json" >> $GITHUB_OUTPUT
       
-      - name: Detect new JUnit 5 test methods
+      - name: Detect modified JUnit 5 test methods
         id: detect-tests
         run: |
           JUNIT_ANNOTATIONS='@Test|@ParameterizedTest|@RepeatedTest|@TestFactory|@TestTemplate|@TestMethodOrder'
@@ -50,23 +50,24 @@ jobs:
           
           # Debugging - print new test files
           echo "New test files JSON: $new_test_files_json"
-          
+
           # Process each test file
           echo "$new_test_files_json" | jq -r '.[]' | while read -r file; do
             echo "Processing $file"
             module_dir=$(echo "$file" | sed -E 's|/src/test/java/.*||')
             
-            # Detect JUnit test methods in the file
-            test_methods=$(grep -E "$JUNIT_ANNOTATIONS" "$file" -A 1 | grep -E "public .* ([a-zA-Z0-9_]+)\(" | sed -E 's/.* ([a-zA-Z0-9_]+)\(.*/\1/')
-            
-            if [ -n "$test_methods" ]; then
-              for method in $test_methods; do
-                echo "Detected test method: $method"
-                new_tests="$new_tests $module_dir:$file:$method"
-              done
-            else
-              echo "No test methods found in $file"
+            # Get only the changed lines for this file
+            modified_lines=$(git diff --unified=0 "$file" | grep '^+' | grep -v '+++' | cut -c2-)
+            if [ -z "$modified_lines" ]; then
+              echo "No modified lines detected in $file"
+              continue
             fi
+
+            # Detect test methods in modified lines
+            echo "$modified_lines" | grep -E "$JUNIT_ANNOTATIONS" -A 1 | grep -E "public .* ([a-zA-Z0-9_]+)\(" | sed -E 's/.* ([a-zA-Z0-9_]+)\(.*/\1/' | while read -r method; do
+              echo "Detected modified test method: $method"
+              new_tests="$new_tests $module_dir:$file:$method"
+            done
           done
 
           # Trim whitespace and set output
