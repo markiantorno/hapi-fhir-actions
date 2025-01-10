@@ -49,40 +49,28 @@ jobs:
           new_tests=""
           
           # Debugging - print new test files
-          echo "New test files: $new_test_files"
+          echo "New test files JSON: $new_test_files_json"
           
-          echo "Processing new test files:"
+          # Process each test file
           echo "$new_test_files_json" | jq -r '.[]' | while read -r file; do
             echo "Processing $file"
             module_dir=$(echo "$file" | sed -E 's|/src/test/java/.*||')
             
-            # Debugging - print the contents of the file
-            echo "Content of $file:"
-            cat "$file"
-            
-            # Use awk to find JUnit test methods
-            test_methods=$(awk -v annotations="$JUNIT_ANNOTATIONS" '
-              BEGIN { RS=""; FS="\n" }
-              {
-                while (match($0, annotations)) {
-                  getline  # Read the next line after the annotation
-                  if (match($0, /public.* ([a-zA-Z0-9_]+)\(/, arr)) {
-                    print arr[1]
-                  }
-                }
-              }
-            ' "$file")
-            
-            echo "Detected test methods: $test_methods"
+            # Detect JUnit test methods in the file
+            test_methods=$(grep -E "$JUNIT_ANNOTATIONS" "$file" -A 1 | grep -E "public .* ([a-zA-Z0-9_]+)\(" | sed -E 's/.* ([a-zA-Z0-9_]+)\(.*/\1/')
             
             if [ -n "$test_methods" ]; then
               for method in $test_methods; do
+                echo "Detected test method: $method"
                 new_tests="$new_tests $module_dir:$file:$method"
               done
+            else
+              echo "No test methods found in $file"
             fi
           done
-      
-          new_tests=$(echo $new_tests | xargs)  # Trim whitespace
+
+          # Trim whitespace and set output
+          new_tests=$(echo $new_tests | xargs)
           echo "new_tests='$new_tests'"
           echo "new_tests=$new_tests" >> $GITHUB_OUTPUT
                     
