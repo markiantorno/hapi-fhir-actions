@@ -20,6 +20,13 @@ jobs:
         with:
           fetch-depth: 0 # Fetch the entire history to ensure proper comparisons
 
+      - name: Build the Maven cache
+        id: cache-maven
+        uses: ./.github/actions/cache-maven
+        with:
+          java-version: '17'
+          cache-path: $HOME/.m2/repository
+
       - name: Fetch master branch
         run: |
           git fetch origin master
