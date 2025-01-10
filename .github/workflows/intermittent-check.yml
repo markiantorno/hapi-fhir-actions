@@ -23,7 +23,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-
+          
       - name: Detect new or modified test files in all modules
         id: find-tests
         run: |
@@ -38,7 +38,7 @@ jobs:
           echo "$new_test_files"
           
           # Store new_test_files as a JSON array for safe handling
-          new_test_files_json=$(printf '%s\n' "$new_test_files" | jq -R . | jq -s .)
+          new_test_files_json=$(printf '%s\n' "$new_test_files" | jq -R . | jq -s -c .)
           echo "new_test_files_json=$new_test_files_json" >> $GITHUB_ENV
           echo "new_test_files_json=$new_test_files_json" >> $GITHUB_OUTPUT
       
