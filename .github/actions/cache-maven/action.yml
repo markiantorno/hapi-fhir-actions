@@ -21,7 +21,7 @@ runs:
 
     - name: Cache Maven dependencies
       id: load-cache
-      uses: ./actions/load-cache-if-exists
+      uses: ./.github/actions/load-cache-if-exists
 
       # Debug cache hit
     - name: Cache Hit or Miss
