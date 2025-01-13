@@ -39,7 +39,7 @@ outputs:
 runs:
     using: "composite"
     steps:
-        - name: Debug Inputs
+        - name: Debug save input
           shell: bash
           run: |
               echo "Input -> Save: ${{ inputs.save }}"
@@ -47,7 +47,7 @@ runs:
         - name: Restore Cache
           id: restore-cache
           if: ${{ inputs.save == 'false' }}
-          uses: actions/cache@v4
+          uses: actions/cache/restore@v4
           with:
               path: ${{ inputs.path }}
               key: ${{ inputs.key }}
@@ -56,7 +56,7 @@ runs:
         - name: Save Cache
           id: save-cache
           if: ${{ inputs.save == 'true' }}
-          uses: actions/cache@v4
+          uses: actions/cache/save@v4
           with:
               path: ${{ inputs.path }}
               key: ${{ inputs.key }}
