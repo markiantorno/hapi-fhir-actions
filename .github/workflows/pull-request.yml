@@ -3,6 +3,10 @@ name: Pull Request Pipeline
 on:
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: bash
+
 jobs:  
   build-cache:
     runs-on: ubuntu-latest  
