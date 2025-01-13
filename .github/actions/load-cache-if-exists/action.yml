@@ -47,4 +47,8 @@ runs:
           id: cache-hit
           shell: bash
           run: |
-            echo "cache-hit=${{ steps.restore-cache.outputs.cache-hit }}" >> $GITHUB_OUTPUT
+              if [ "${{ steps.restore-cache.outputs.cache-hit }}" == "true" ]; then
+                echo "cache-hit=true" >> $GITHUB_OUTPUT
+              else
+                echo "cache-hit=false" >> $GITHUB_OUTPUT
+              fi
