@@ -84,5 +84,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           modules: ${{ needs.generate-module-list.outputs.modules_list }}
-
-
