@@ -30,6 +30,7 @@ inputs:
 outputs:
     cache-hit:
         description: Indicates whether an exact match was found for the cache key.
+        value: ${{ steps.cache-hit.outputs.cache-hit }}
 
 runs:
     using: "composite"
@@ -42,6 +43,6 @@ runs:
               restore-keys: ${{ inputs.restore-keys }}
 
         - name: Set cache-hit output
+          id: cache-hit
           shell: bash
-          run: echo "cache-hit=${{ steps.restore-cache.outputs.cache-hit }}" >> $GITHUB_ENV
-
+          run: echo "cache-hit=${{ steps.restore-cache.outputs.cache-hit }}" >> $GITHUB_OUTPUT
