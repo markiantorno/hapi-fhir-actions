@@ -39,7 +39,7 @@ runs:
       env:
         MAVEN_CACHE_FOLDER: ${{ inputs.cache-path }}
       run: |
-        mvn dependency:resolve-plugins dependency:resolve test-compile \
+        mvn dependency:go-offline test-compile \
           -Dmaven.repo.local=$MAVEN_CACHE_FOLDER \
           -Dstyle.color=always -Djansi.force=true
 
