@@ -1,5 +1,5 @@
-# actions/maven-cache/action.yml
-name: Restore Maven Cache
+# actions/load-cache-if-exists/action.yml
+name: Attempt to Restore Cache
 description: Restores the Maven cache from the GitHub Actions cache service.
 inputs:
     path:

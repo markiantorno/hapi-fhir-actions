@@ -24,7 +24,7 @@ runs:
         distribution: 'temurin'
 
     - name: Restore Maven Cache
-      uses: ./actions/maven-cache
+      uses: ./actions/load-cache-if-exists
 
     - name: Build Module ${{ inputs.module-name }}
       shell: bash

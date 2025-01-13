@@ -20,14 +20,14 @@ runs:
         distribution: "temurin"
 
     - name: Cache Maven dependencies
-      id: cache-maven
-      uses: ./actions/restore-maven-cache
+      id: load-cache
+      uses: ./actions/load-cache-if-exists
 
       # Debug cache hit
     - name: Cache Hit or Miss
       shell: bash
       run: |
-          if [[ "${{ steps.cache-maven.outputs.cache-hit }}" == "true" ]]; then
+          if [[ "${{ steps.load-cache.outputs.cache-hit }}" == "true" ]]; then
             echo "Cache hit, skipping dependency resolution.";
           else
             echo "Cache miss, dependencies have been downloaded.";
@@ -35,7 +35,7 @@ runs:
 
     - name: Populate Cache with Remote Dependencies
       shell: bash      
-      if: steps.cache-maven.outputs.cache-hit != 'true'
+      if: steps.load-cache.outputs.cache-hit != 'true'
       env:
         MAVEN_CACHE_FOLDER: ${{ inputs.cache-path }}
       run: |
@@ -45,7 +45,7 @@ runs:
 
     - name: Build with Maven
       shell: bash   
-      if: steps.cache-maven.outputs.cache-hit != 'true'
+      if: steps.load-cache.outputs.cache-hit != 'true'
       env:
         MAVEN_CACHE_FOLDER: ${{ inputs.cache-path }}
         MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'

@@ -38,7 +38,7 @@ runs:
         MAVEN_CACHE_FOLDER: $HOME/.m2/repository 
 
     - name: Restore Maven Cache
-      uses: ./actions/maven-cache
+      uses: ./actions/load-cache-if-exists
 
     - name: Build Maven Module
       shell: bash
