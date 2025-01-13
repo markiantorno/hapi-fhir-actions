@@ -28,9 +28,9 @@ inputs:
 #   which might still be useful if an exact match isn’t available to help speed up the build.
 
 outputs:
-    cache-hit:
+    cache-exists:
         description: Indicates whether an exact match was found for the cache key.
-        value: ${{ steps.cache-hit.outputs.cache-hit }}
+        value: ${{ steps.restore-cache.outputs.cache-hit }}
 
 runs:
     using: "composite"
@@ -42,13 +42,3 @@ runs:
               path: ${{ inputs.path }}
               key: ${{ inputs.key }}
               restore-keys: ${{ inputs.restore-keys }}
-
-        - name: Set cache-hit output
-          id: cache-hit
-          shell: bash
-          run: |
-              if [ "${{ steps.restore-cache.outputs.cache-hit }}" == "true" ]; then
-                echo "cache-hit=true" >> $GITHUB_OUTPUT
-              else
-                echo "cache-hit=false" >> $GITHUB_OUTPUT
-              fi
