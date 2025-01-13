@@ -46,4 +46,5 @@ runs:
         - name: Set cache-hit output
           id: cache-hit
           shell: bash
-          run: echo "cache-hit=${{ steps.restore-cache.outputs.cache-hit }}" >> $GITHUB_OUTPUT
+          run: |
+            echo "cache-hit=${{ steps.restore-cache.outputs.cache-hit }}" >> $GITHUB_OUTPUT
