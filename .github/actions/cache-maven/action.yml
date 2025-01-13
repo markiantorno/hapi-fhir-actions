@@ -62,4 +62,4 @@ runs:
       id: save-cache
       uses: ./.github/actions/caching-handler
       with:
-        save: true
+        save: 'true'

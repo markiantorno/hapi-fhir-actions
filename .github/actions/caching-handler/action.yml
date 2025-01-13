@@ -20,7 +20,7 @@ inputs:
     save:
         description: Whether to save the cache (true) or restore it (false).
         required: false
-        default: false
+        default: 'false'
 
 #   The key is the primary identifier for a cache. It uniquely defines a cache entry. If the key matches an
 #   existing cache entry exactly, that cache will be restored. The default way we use it here is generating
