@@ -33,14 +33,14 @@ inputs:
 
 outputs:
     cache-exists:
-        description: Indicates whether an exact match was found for the cache key.
-        value: ${{ steps.cache-operation.outputs.cache-hit }}
+        description: Indicates whether an exact match was found for the cache key (only for restore).
+        value: ${{ steps.restore-cache.outputs.cache-hit }}
 
 runs:
     using: "composite"
     steps:
-        - name: Handle Cache
-          id: cache-operation
+        - name: Restore Cache
+          id: restore-cache
           if: ${{ inputs.save == 'false' }}
           uses: actions/cache@v4
           with:
@@ -49,9 +49,9 @@ runs:
 #              restore-keys: ${{ inputs.restore-keys }}
 
         - name: Save Cache
-          id: cache-operation
+          id: save-cache
           if: ${{ inputs.save == 'true' }}
-          uses: actions/cache/save@v4
+          uses: actions/cache@v4
           with:
               path: ${{ inputs.path }}
               key: ${{ inputs.key }}
