@@ -92,6 +92,16 @@ public class FhirResourceDaoDstu2UpdateTest extends BaseJpaDstu2Test {
 		myPatientDao.update(p, mySrd);
 	}
 
+	@Test
+	public void testUpdateDoesntFailForUnknownIdWithNumberThenText_two() {
+		String methodName = "testUpdateFailsForUnknownIdWithNumberThenText";
+		Patient p = new Patient();
+		p.setId("0" + methodName);
+		p.addName().addFamily(methodName);
+
+		myPatientDao.update(p, mySrd);
+	}
+
 	/**
 	 * Make sure we can upload a real example resource from the DSTU2 argonaut example pack
 	 */

@@ -20,4 +20,12 @@ public class SimpleRequestHeaderInterceptorTest {
 		assertNull(i.getHeaderValue());
 	}
 
+	@Test
+	public void testParseComnpleteHeaderNameOnly_two(){
+		SimpleRequestHeaderInterceptor i = new SimpleRequestHeaderInterceptor("Authorization");
+		assertEquals("Authorization", i.getHeaderName());
+		assertNull(i.getHeaderValue());
+	}
+
+
 }
