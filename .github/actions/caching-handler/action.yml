@@ -12,11 +12,6 @@ inputs:
         #  The glob pattern **/pom.xml will match all pom.xml files in the repository, including the root pom.xml file.
         default: |
             ${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
-    restore-keys:
-        description: Fallback cache keys.
-        required: false
-        default: |
-            ${{ runner.os }}-
     save:
         description: Whether to save the cache (true) or restore it (false).
         required: false
@@ -25,11 +20,6 @@ inputs:
 #   The key is the primary identifier for a cache. It uniquely defines a cache entry. If the key matches an
 #   existing cache entry exactly, that cache will be restored. The default way we use it here is generating
 #   based on the inputs or dependencies that define the cache's contents, in our case, the pom files.
-#   The restore-keys act as fallback identifiers when an exact match for the key is not found. So, if no
-#   cache matches the key, the action searches for partial matches using the restore-keys in the order they
-#   are specified. We only have one default here, the runner os and id, but typically, these are
-#   progressively broader keys. The idea here is that we want to restore older or more generic caches...
-#   which might still be useful if an exact match isn’t available to help speed up the build.
 
 outputs:
     cache-exists:
@@ -51,7 +41,6 @@ runs:
           with:
               path: ${{ inputs.path }}
               key: ${{ inputs.key }}
-#              restore-keys: ${{ inputs.restore-keys }}
 
         - name: Save Cache
           id: save-cache

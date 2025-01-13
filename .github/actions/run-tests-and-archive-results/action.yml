@@ -9,7 +9,7 @@ inputs:
   maven-cache-folder:
     description: 'Folder path for Maven cache'
     required: true
-    default: '${{ runner.os }}/.m2/repository'
+    default: "$HOME/.m2/repository"
   module-name:
     description: 'The Maven module name to build'
     required: true
