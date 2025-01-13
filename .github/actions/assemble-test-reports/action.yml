@@ -21,7 +21,7 @@ runs:
         fetch-depth: 1
 
     - name: Restore Maven Cache
-      uses: ./.github/actions/load-cache-if-exists
+      uses: ./.github/actions/caching-handler
 
     - name: Compile all previously generated reports
       uses: ./.github/actions/compile-test-results

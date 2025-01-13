@@ -1,4 +1,4 @@
-# actions/load-cache-if-exists/action.yml
+# actions/restore-cache/action.yml
 name: Attempt to Restore Cache
 description: Restores the Maven cache from the GitHub Actions cache service.
 inputs:
@@ -37,7 +37,7 @@ runs:
     steps:
         - name: Restore Maven cache
           id: restore-cache
-          uses: actions/cache@v4
+          uses: actions/cache/restore@v4
           with:
               path: ${{ inputs.path }}
               key: ${{ inputs.key }}

@@ -19,9 +19,9 @@ runs:
         java-version: ${{ inputs.java-version }}
         distribution: "temurin"
 
-    - name: Cache Maven dependencies
+    - name: Restore Cached Maven dependencies
       id: load-cache
-      uses: ./.github/actions/load-cache-if-exists
+      uses: ./.github/actions/caching-handler
 
       # Debug cache hit
     - name: Cache Hit or Miss
@@ -57,3 +57,9 @@ runs:
           -Dmaven.repo.local=$MAVEN_CACHE_FOLDER \
           -Dhttp.keepAlive=false \
           -Dstyle.color=always -Djansi.force=true
+
+    - name: Cache Maven dependencies
+      id: save-cache
+      uses: ./.github/actions/caching-handler
+      with:
+        save: true
