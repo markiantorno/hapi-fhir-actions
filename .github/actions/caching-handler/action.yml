@@ -22,7 +22,7 @@ inputs:
 #   based on the inputs or dependencies that define the cache's contents, in our case, the pom files.
 
 outputs:
-    cache-exists:
+    cache-hit:
         description: Indicates whether an exact match was found for the cache key (only for restore).
         value: ${{ steps.restore-cache.outputs.cache-hit }}
 

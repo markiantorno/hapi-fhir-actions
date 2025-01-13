@@ -22,7 +22,7 @@ jobs:
 
       - name: Build the Maven cache
         id: cache-maven
-        uses: ./.github/actions/cache-maven
+        uses: ./.github/actions/build-cache
         with:
           java-version: '17'
           cache-path: $HOME/.m2/repository
