@@ -3,11 +3,11 @@ description: "Caches Maven dependencies, resolves plugins, and builds if the cac
 inputs:
   java-version:
     description: "The Java version to use"
-    required: true
+    required: false
     default: "17"
   cache-path:
     description: "The path for the Maven cache"
-    required: true
+    required: false
     default: "$HOME/.m2/repository"
 
 runs:
@@ -21,12 +21,17 @@ runs:
 
     - name: Cache Maven dependencies
       id: cache-maven
-      uses: actions/cache@v4
-      with:
-        path: ${{ inputs.cache-path }}
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-maven-
+      uses: ./actions/restore-maven-cache
+
+      # Debug cache hit
+    - name: Cache Hit or Miss
+      shell: bash
+      run: |
+          if [[ "${{ steps.cache-maven.outputs.cache-hit }}" == "true" ]]; then
+            echo "Cache hit, skipping dependency resolution.";
+          else
+            echo "Cache miss, dependencies have been downloaded.";
+          fi
 
     - name: Populate Cache with Remote Dependencies
       shell: bash      
@@ -52,13 +57,3 @@ runs:
           -Dmaven.repo.local=$MAVEN_CACHE_FOLDER \
           -Dhttp.keepAlive=false \
           -Dstyle.color=always -Djansi.force=true
-
-    # Debug cache hit
-    - name: Cache Hit or Miss
-      shell: bash   
-      run: |
-        if [[ "${{ steps.cache-maven.outputs.cache-hit }}" == "true" ]]; then
-          echo "Cache hit, skipping dependency resolution.";
-        else
-          echo "Cache miss, dependencies have been downloaded.";
-        fi

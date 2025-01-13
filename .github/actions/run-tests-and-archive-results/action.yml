@@ -23,13 +23,8 @@ runs:
         java-version: ${{ inputs.java-version }}
         distribution: 'temurin'
 
-    - name: Restore Maven cache
-      uses: actions/cache@v4
-      with:
-        path: ${{ inputs.maven-cache-folder }}
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: |
-          ${{ runner.os }}-
+    - name: Restore Maven Cache
+      uses: ./actions/maven-cache
 
     - name: Build Module ${{ inputs.module-name }}
       shell: bash
