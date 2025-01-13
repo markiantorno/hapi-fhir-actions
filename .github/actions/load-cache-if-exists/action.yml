@@ -11,7 +11,7 @@ inputs:
         required: false
         #  The glob pattern **/pom.xml will match all pom.xml files in the repository, including the root pom.xml file.
         default: |
-            maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+            ${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
     restore-keys:
         description: Fallback cache keys.
         required: false
@@ -41,4 +41,4 @@ runs:
           with:
               path: ${{ inputs.path }}
               key: ${{ inputs.key }}
-              restore-keys: ${{ inputs.restore-keys }}
+#              restore-keys: ${{ inputs.restore-keys }}
