@@ -39,6 +39,11 @@ outputs:
 runs:
     using: "composite"
     steps:
+        - name: Debug Inputs
+          shell: bash
+          run: |
+              echo "Input -> Save: ${{ inputs.save }}"
+
         - name: Restore Cache
           id: restore-cache
           if: ${{ inputs.save == 'false' }}
