@@ -60,6 +60,7 @@ runs:
 
     - name: Cache Maven dependencies
       id: save-cache
+      if: steps.load-cache.outputs.cache-hit != 'true'
       uses: ./.github/actions/caching-handler
       with:
         save: 'true'
