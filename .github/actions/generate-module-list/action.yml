@@ -22,12 +22,14 @@ runs:
         java-version: '17'
 
     - name: Debug - Print passed in ignored modules in a newline-separated list
+      shell: bash
       run: |
         echo "Modules to ignore:"
         echo "${{ inputs.ignored_modules }}" | tr ',' '\n'
         
     - name: Find and list Maven modules
       id: list-modules
+      shell: bash
       run: |
         # Specify the directory containing your multi-module Maven project
         root_dir=$(pwd)
@@ -83,6 +85,7 @@ runs:
         echo "Done compiling module list..."
 
     - name: Debug - Print modules in a newline-separated list
+      shell: bash
       run: |
         echo "Modules list generated:"
         echo "${{ steps.list-modules.outputs.modules_list }}" | tr ',' '\n'

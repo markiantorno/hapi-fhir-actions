@@ -42,5 +42,6 @@ runs:
               restore-keys: ${{ inputs.restore-keys }}
 
         - name: Set cache-hit output
+          shell: bash
           run: echo "cache-hit=${{ steps.restore-cache.outputs.cache-hit }}" >> $GITHUB_ENV
 
