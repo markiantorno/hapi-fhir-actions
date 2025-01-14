@@ -41,7 +41,7 @@ runs:
               MAVEN_OPTS: '-Xmx1024m -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Duser.timezone=America/Toronto'
           run: |
               mvn clean install -P CI,CHECKSTYLE \
-                dependency:go-offline dependency:resolve-plugins \
+                dependency:resolve-plugins \
                 test-compile \
                 -Dmaven.test.skip=true -e -B \
                 -Dmaven.javadoc.skip=true \
