@@ -36,6 +36,11 @@ runs:
           echo "Processing artifact: $artifact"
           mkdir -p temp_download
           gh run download --name "$artifact" --dir temp_download
+          
+          original_name="${artifact//_//}" # Replace '_' back to '/'
+          mkdir -p "temp_download/$original_name"
+          mv "temp_download/$sanitized_name" "temp_download/$original_name"
+          
           cp -r temp_download/* .
           rm -rf temp_download
         done
