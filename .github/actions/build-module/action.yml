@@ -52,9 +52,9 @@ runs:
           -Dmaven.wagon.http.pool=false -Dhttp.keepAlive=false \
           -Dstyle.color=always -Djansi.force=true
 
-#    - name: Upload Target Artifacts
-#      uses: actions/upload-artifact@v3
-#      if: always()
-#      with:
-#        name: ${{ inputs.module }}
-#        path: '**/target'
+    - name: Upload Target Artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: ${{ inputs.module }}_build
+        path: '**/target'
