@@ -38,12 +38,12 @@ runs:
           -Dmaven.wagon.http.pool=false -Dhttp.keepAlive=false \
           -Dstyle.color=always -Djansi.force=true
       
-    - name: Copy test log files
-      shell: bash
-      if: always()
-      run: |
-        mkdir -p ${{ github.workspace }}/artifacts
-        find . -wholename '**/target/*-reports/*.txt' -exec cp {} ${{ github.workspace }}/artifacts \;
+#    - name: Copy test log files
+#      shell: bash
+#      if: always()
+#      run: |
+#        mkdir -p ${{ github.workspace }}/artifacts
+#        find . -wholename '**/target/*-reports/*.txt' -exec cp {} ${{ github.workspace }}/artifacts \;
 
     - name: Clean Module Name
       id: clean_module_name
@@ -54,16 +54,16 @@ runs:
         cleaned_name=$(basename "$module_name")
         echo "cleaned_name=$cleaned_name" >> $GITHUB_OUTPUT
 
-    - name: Upload Full Test Logs
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: ${{ steps.clean_module_name.outputs.cleaned_name }}_full_logs_${{ github.run_id }}_${{ github.run_number }}
-        path: ${{ github.workspace }}/artifacts
+#    - name: Upload Full Test Logs
+#      uses: actions/upload-artifact@v4
+#      if: always()
+#      with:
+#        name: ${{ steps.clean_module_name.outputs.cleaned_name }}_full_logs_${{ github.run_id }}_${{ github.run_number }}
+#        path: ${{ github.workspace }}/artifacts
 
     - name: Publish Target Directory
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: ${{ steps.clean_module_name.outputs.cleaned_name }}_target
-        path: ${{ github.workspace }}/${{ inputs.module-name }}/target
+        name: ${{ steps.clean_module_name.outputs.cleaned_name }}
+        path: '**/target'
