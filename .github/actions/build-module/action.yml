@@ -57,4 +57,4 @@ runs:
       if: always()
       with:
         name: ${{ inputs.module }}_build
-        path: '**/target'
+        path: './**/target'

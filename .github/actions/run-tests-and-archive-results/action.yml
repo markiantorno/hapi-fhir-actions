@@ -66,4 +66,4 @@ runs:
       if: always()
       with:
         name: ${{ steps.clean_module_name.outputs.cleaned_name }}_test
-        path: '**/target'
+        path: './**/target'

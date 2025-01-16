@@ -24,7 +24,7 @@ runs:
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
-        path: '${{ github.workspace }}'
+        path: . #'${{ github.workspace }}'
 
     - name: List top-level directories and files in artifacts
       shell: bash
