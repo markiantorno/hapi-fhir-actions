@@ -51,5 +51,6 @@ runs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: ${{ steps.clean_module_name.outputs.cleaned_name }}_test
+#        name: ${{ steps.clean_module_name.outputs.cleaned_name }}_test
+        name: ${{ inputs.module-name }}
         path: './**/target'
