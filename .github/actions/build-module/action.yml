@@ -56,5 +56,5 @@ runs:
       uses: actions/upload-artifact@v3
       if: always()
       with:
-        name: ${{ inputs.name }}_target
+        name: ${{ inputs.name }}
         path: '**/target'

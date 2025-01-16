@@ -29,7 +29,7 @@ runs:
     - name: List top-level directories and files in artifacts
       shell: bash
       run: |
-        echo "Listing top-level directories and files in ${GITHUB_WORKSPACE}/artifacts:"
+        echo "Listing top-level directories and files in ${GITHUB_WORKSPACE}"
         ls -lh "${GITHUB_WORKSPACE}"
     
 #    - name: Iterate through modules and process downloaded artifacts
