@@ -26,12 +26,19 @@ runs:
       with:
         path: . #'${{ github.workspace }}'
 
-    - name: List top-level directories and files in artifacts
+    - name: List All Directories and Subdirectories
       shell: bash
       run: |
-        echo "Listing top-level directories and files in ${GITHUB_WORKSPACE}"
-        ls -lh "${GITHUB_WORKSPACE}"
-    
+        TARGET_PATH="${GITHUB_WORKSPACE}"
+        echo "Listing all directories and subdirectories under $TARGET_PATH:"
+        find "$TARGET_PATH" -type d -exec ls -ld {} +
+
+#    - name: List top-level directories and files in artifacts
+#      shell: bash
+#      run: |
+#        echo "Listing top-level directories and files in ${GITHUB_WORKSPACE}"
+#        ls -lh "${GITHUB_WORKSPACE}"
+#
 #    - name: Iterate through modules and process downloaded artifacts
 #      shell: bash
 #      run: |
