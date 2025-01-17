@@ -12,58 +12,44 @@ runs:
   using: composite
   steps:
 
-    - name: Download and Restore Artifacts
+    # Step 1: Download all artifacts using the GitHub Action
+    - name: Download All Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: ./artifacts # All artifacts will be downloaded here
+
+    # Step 2: Process downloaded artifacts and restore original paths
+    - name: Restore Artifacts to Original Locations
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.github_token }}
       run: |
-        echo "Fetching all artifacts..."
-        
-        # Debug the API response
-        response=$(gh api -H "Accept: application/vnd.github.v4+json" \
-          "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts")
-        
-        echo "API response: $response"
-        
-        # Extract artifact names
-        artifacts=$(echo "$response" | jq -r '.artifacts[] | .name')
-        
-        if [ -z "$artifacts" ]; then
-          echo "No artifacts found. Please ensure artifacts are uploaded in prior steps."
-          exit 1
-        fi
-        
-        echo "Artifacts found: $artifacts"
-        
-        # Process artifacts
-        for artifact in $artifacts; do
-        echo "Processing artifact: $artifact"
-        
-        # Replace underscores with slashes
+        echo "Restoring artifacts to original locations..."
+
+        # Process each artifact in the downloaded directory
+        for artifact_path in ./artifacts/*; do
+          artifact=$(basename "$artifact_path")
+          echo "Processing artifact: $artifact"
+
+          # Replace underscores with slashes to get the original module path
           original_name=$(echo "$artifact" | sed 's|_|/|g')
           echo "Restoring original name: $original_name"
-          
-          # Create a temp directory for extraction
-          temp_dir="temp_artifact"
-          mkdir -p "$temp_dir"
-          
-          # Download the artifact
-          gh run download --name "$artifact" --dir "$temp_dir"
-          
-          # Move the extracted files to the original location
+
+          # Target directory for the restored artifact
           target_dir="${original_name}/target"
+
+          # Ensure the target directory exists
           mkdir -p "$(dirname "$target_dir")"
-          mv "$temp_dir"/* "$target_dir"
-          
-          # Clean up temp directory
-          rm -rf "$temp_dir"
-          
+
+          # Move the artifact to the target directory
+          mv "$artifact_path"/* "$target_dir"
+
           echo "Restored artifact for: $original_name"
         done
-        
+
         echo "All artifacts have been restored to their original locations."
 
-#    - name: Download all artifacts
+    #    - name: Download all artifacts
 #      uses: actions/download-artifact@v4
 #      with:
 #        path: . #'${{ github.workspace }}'
