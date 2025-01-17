@@ -11,45 +11,45 @@ inputs:
 runs:
   using: composite
   steps:
-#    - name: List available artifacts (debug)
-#      shell: bash
-#      env:
-#        GH_TOKEN: ${{ github.token }}
-#      run: |
-#        gh api -H "Authorization: token $GH_TOKEN" \
-#               -H "Accept: application/vnd.github.v3+json" \
-#               "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
-#        | jq -r '.artifacts[] | .name'
 
-    - name: Download and Extract All Artifacts
+    - name: Download and Restore Artifacts
       shell: bash
-      env:
-          GH_TOKEN: ${{ inputs.github_token }}
       run: |
-        echo "Listing all available artifacts..."
-        gh api -H "Authorization: token $GH_TOKEN" \
-               -H "Accept: application/vnd.github.v3+json" \
-               "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
-        | jq -r '.artifacts[] | .name'
+        echo "Fetching all artifacts..."
         
-        echo "Downloading and extracting artifacts..."
-        for artifact in $(gh api -H "Authorization: token $GH_TOKEN" \
-                            -H "Accept: application/vnd.github.v3+json" \
-                            "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
-                          | jq -r '.artifacts[] | .name'); do
-          
-          echo "Processing artifact: $artifact"
-          mkdir -p temp_download
-          gh run download --name "$artifact" --dir temp_download
-          
-          original_name="${artifact//_//}" # Replace '_' back to '/'
-          mkdir -p "temp_download/$original_name"
-          mv "temp_download/$sanitized_name" "temp_download/$original_name"
-          
-          cp -r temp_download/* .
-          rm -rf temp_download
+        # List all artifacts
+        artifacts=$(gh api -H "Accept: application/vnd.github.v3+json" \
+        "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" | jq -r '.artifacts[] | .name')
+        
+        echo "Processing artifacts: $artifacts"
+        
+        # Download and restore each artifact
+        for artifact in $artifacts; do
+        echo "Processing artifact: $artifact"
+  
+        # Replace underscores with slashes
+        original_name=$(echo "$artifact" | sed 's|_|/|g')
+        echo "Restoring original name: $original_name"
+  
+        # Create a temp directory for extraction
+        temp_dir="temp_artifact"
+        mkdir -p "$temp_dir"
+  
+        # Download the artifact
+        gh run download --name "$artifact" --dir "$temp_dir"
+  
+        # Move the extracted files to the original location
+        target_dir="${original_name}/target"
+        mkdir -p "$(dirname "$target_dir")"
+        mv "$temp_dir"/* "$target_dir"
+  
+        # Clean up temp directory
+        rm -rf "$temp_dir"
+  
+        echo "Restored artifact for: $original_name"
         done
-        echo "Artifacts restored to the workspace."
+        
+        echo "All artifacts have been restored to their original locations."
 
 #    - name: Download all artifacts
 #      uses: actions/download-artifact@v4
