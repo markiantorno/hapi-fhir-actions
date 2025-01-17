@@ -24,7 +24,7 @@ runs:
     - name: Download and Extract All Artifacts
       shell: bash
       env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ inputs.github_token }}
       run: |
         echo "Listing all available artifacts..."
         gh api -H "Authorization: token $GH_TOKEN" \
