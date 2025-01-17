@@ -27,12 +27,17 @@ runs:
           GH_TOKEN: ${{ github.token }}
       run: |
         echo "Listing all available artifacts..."
-        gh api -H "Accept: application/vnd.github.v3+json" "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
-          | jq -r '.artifacts[] | .name'
+        gh api -H "Authorization: token $GH_TOKEN" \
+               -H "Accept: application/vnd.github.v3+json" \
+               "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
+        | jq -r '.artifacts[] | .name'
         
         echo "Downloading and extracting artifacts..."
-        for artifact in $(gh api -H "Accept: application/vnd.github.v3+json" "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
+        for artifact in $(gh api -H "Authorization: token $GH_TOKEN" \
+                            -H "Accept: application/vnd.github.v3+json" \
+                            "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
                           | jq -r '.artifacts[] | .name'); do
+          
           echo "Processing artifact: $artifact"
           mkdir -p temp_download
           gh run download --name "$artifact" --dir temp_download
