@@ -79,8 +79,10 @@ runs:
           echo "No modules found!"
         else
           # Set the output for the GitHub Action
-          echo "modules_list=$modules_list" >> $GITHUB_OUTPUT
-        fi
+          # echo "modules_list=$modules_list" >> $GITHUB_OUTPUT
+          echo "modules_list=hapi-fhir-android,hapi-fhir-base,hapi-fhir-checkstyle,hapi-fhir-cli/hapi-fhir-cli-api,hapi-fhir-client-apache-http5,hapi-fhir-client-okhttp" >> $GITHUB_OUTPUT
+          
+          fi
     
         echo "Done compiling module list..."
 
