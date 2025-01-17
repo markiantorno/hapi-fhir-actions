@@ -14,6 +14,8 @@ runs:
 
     - name: Download and Restore Artifacts
       shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
       run: |
         echo "Fetching all artifacts..."
         
