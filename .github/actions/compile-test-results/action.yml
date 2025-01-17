@@ -20,7 +20,7 @@ runs:
         echo "Fetching all artifacts..."
         
         # Debug the API response
-        response=$(gh api -H "Accept: application/vnd.github.v3+json" \
+        response=$(gh api -H "Accept: application/vnd.github.v4+json" \
           "/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts")
         
         echo "API response: $response"
