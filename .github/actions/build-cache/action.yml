@@ -23,7 +23,6 @@ runs:
       id: load-cache
       uses: ./.github/actions/caching-handler
 
-      # Debug cache hit
     - name: Cache Hit or Miss
       shell: bash
       run: |
