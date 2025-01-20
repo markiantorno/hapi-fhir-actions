@@ -33,11 +33,11 @@ runs:
           original_name=$(echo "$artifact" | sed 's|_|/|g')
           echo "Restoring original name: $original_name"
 
-          # Target directory for the restored artifact
-          target_dir="${original_name}"
+          # Append 'target' to the original module path to ensure the correct target directory
+          target_dir="${GITHUB_WORKSPACE}/${original_name}/target"
 
           # Ensure the target directory exists
-          mkdir -p "$(dirname "$target_dir")"
+          mkdir -p "$target_dir"
 
           # Move the artifact to the target directory
           mv "$artifact_path"/* "$target_dir"
