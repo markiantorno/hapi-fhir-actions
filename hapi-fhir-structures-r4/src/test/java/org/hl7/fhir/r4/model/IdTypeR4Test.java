@@ -65,11 +65,6 @@ public class IdTypeR4Test {
 
 	}
 
-	@Test
-	void thisTestAlwaysFails() {
-		Assertions.fail("This test fails every time.");
-	}
-
 	/**
 	 * See #67
 	 */

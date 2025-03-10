@@ -5,6 +5,7 @@ import ca.uhn.fhir.i18n.Msg;
 import ca.uhn.fhir.rest.server.SimpleBundleProvider;
 import com.google.common.collect.Lists;
 import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,6 +42,11 @@ public class IBundleProviderTest {
 			}
 		};
 		assertFalse(provider.isEmpty());
+	}
+
+	@Test
+	void thisTestAlwaysFails() {
+		Assertions.fail("This test fails every time.");
 	}
 
 	@Test
