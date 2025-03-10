@@ -3,6 +3,7 @@ package org.hl7.fhir.r4.model;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.util.TestUtil;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -62,6 +63,11 @@ public class IdTypeR4Test {
 		IdType id = new IdType(new BigDecimal("123"));
 		assertEquals(id.getIdPartAsBigDecimal(), new BigDecimal("123"));
 
+	}
+
+	@Test
+	void thisTestAlwaysFails() {
+		Assertions.fail("This test fails every time.");
 	}
 
 	/**

@@ -35,7 +35,8 @@ jobs:
         uses: ./.github/actions/generate-module-list
         with:
 #         We ignore a bunch of modules that we don't want tested because they (a) are demo modules, or (b) have no tests
-          ignored_modules: 'hapi-fhir-bom,hapi-deployable-pom,hapi-fhir-spring-boot,hapi-fhir-spring-boot-sample-client-apache,hapi-fhir-spring-boot-sample-client-okhttp,hapi-fhir-spring-boot-starter,hapi-fhir-spring-boot-samples,hapi-fhir-validation-resources-dstu2.1,hapi-fhir-structures-r4b,hapi-fhir-validation-resources-r4b,hapi-fhir-jpa,hapi-fhir-serviceloaders,hapi-fhir-storage-batch2-test-utilities,hapi-fhir-cli,hapi-fhir-dist,hapi-fhir-jacoco,hapi-fhir-server-cds-hooks,hapi-fhir-caching-testing,hapi-fhir-cli-app,hapi-fhir-karaf-features,hapi-fhir-karaf-integration-tests,osgi'
+#          ignored_modules: 'hapi-fhir-bom,hapi-deployable-pom,hapi-fhir-spring-boot,hapi-fhir-spring-boot-sample-client-apache,hapi-fhir-spring-boot-sample-client-okhttp,hapi-fhir-spring-boot-starter,hapi-fhir-spring-boot-samples,hapi-fhir-validation-resources-dstu2.1,hapi-fhir-structures-r4b,hapi-fhir-validation-resources-r4b,hapi-fhir-jpa,hapi-fhir-serviceloaders,hapi-fhir-storage-batch2-test-utilities,hapi-fhir-cli,hapi-fhir-dist,hapi-fhir-jacoco,hapi-fhir-server-cds-hooks,hapi-fhir-caching-testing,hapi-fhir-cli-app,hapi-fhir-karaf-features,hapi-fhir-karaf-integration-tests,osgi'
+          ignored_modules: 'hapi-fhir-jpaserver-test-dstu3,hapi-fhir-spring-boot,hapi-fhir-validation,hapi-fhir-structures-r4,hapi-fhir-storage-cr,hapi-fhir-jpaserver-test-utilities,hapi-fhir-jpaserver-test-r4,hapi-fhir-jpaserver-test-r5,hapi-fhir-jpaserver-mdm,hapi-fhir-jpaserver-base,hapi-fhir-jpaserver-elastic-test-utilities,hapi-fhir-cli/hapi-fhir-cli-api,hapi-fhir-bom,hapi-deployable-pom,hapi-fhir-spring-boot-sample-client-apache,hapi-fhir-spring-boot-sample-client-okhttp,hapi-fhir-spring-boot-starter,hapi-fhir-spring-boot-samples,hapi-fhir-validation-resources-dstu2.1,hapi-fhir-structures-r4b,hapi-fhir-validation-resources-r4b,hapi-fhir-jpa,hapi-fhir-serviceloaders,hapi-fhir-storage-batch2-test-utilities,hapi-fhir-cli,hapi-fhir-dist,hapi-fhir-jacoco,hapi-fhir-server-cds-hooks,hapi-fhir-caching-testing,hapi-fhir-cli-app,hapi-fhir-karaf-features,hapi-fhir-karaf-integration-tests,osgi'
 
       - name: Format Modules List as JSON Array
         id: format-modules
@@ -87,3 +88,17 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           modules: ${{ needs.generate-module-list.outputs.modules_list }}
+
+  final-result:
+      if: ${{ always() }}
+      runs-on: ubuntu-latest
+      name: Final Results
+      needs: [assemble-test-reports]
+      steps:
+          - run: exit 1
+            if: >-
+                ${{
+                     contains(needs.*.result, 'failure')
+                  || contains(needs.*.result, 'cancelled')
+                  || contains(needs.*.result, 'skipped')
+                }}
